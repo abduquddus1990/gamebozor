@@ -3,7 +3,7 @@
 Bot: [@akkbozorbot](https://t.me/akkbozorbot) · Kanal: [@eakkbozor](https://t.me/eakkbozor)
 Stack: **Python 3.11+ · aiogram 3 · SQLAlchemy 2 (async) · SQLite → PostgreSQL**
 
-## Imkoniyatlar (v0.4)
+## Imkoniyatlar (v0.5)
 
 | Foydalanuvchi | Admin |
 |---|---|
@@ -17,6 +17,7 @@ Stack: **Python 3.11+ · aiogram 3 · SQLAlchemy 2 (async) · SQLite → Postgre
 | 👋 Onboarding: START tugmasi → til → bot haqida → 📖 5 sahifali qo'llanma → 📜 qoidalar → ✅ rozilik | Sotildi → kanal posti avtomatik «SOTILDI» |
 | 📜 Qoidalar (garant emasmiz, to'lovlar uchun javobgar emasmiz) — /start da, Dashboard'da, /rules | |
 | ⌨️ `/` menyusida 17 ta buyruq (uz/ru) | |
+| 💎 **PRO sotuvchi** (Stars): 20 ta e'lon, har 48 soatda avto-ko'tarish, bepul TOP, PRO belgisi, ustuvor moderatsiya — /pro | `/givepro ID KUN` — PRO berish |
 | 🎮 eFootball + **PUBG Mobile** (rank, X-Suit, mifiklar, Glacier qurollar, UC) | `/delreview ID` — soxta sharhni o'chirish |
 | 📉 **Narx tushishi**: sotuvchi narxni o'zgartiradi → saralaganlar va mos obunachilarga xabar, eski narx chizilgan | ⚠️ 1–2⭐️ baholar adminlarga keladi |
 | ⭐️ **Reyting va sharhlar**: faqat «Bog'lanish» bosgan xaridor baholaydi; sotildi → baho so'raladi | |
@@ -67,35 +68,18 @@ Test (Telegramsiz, butun oqim):
 python -m tests.test_flow
 ```
 
-## 2. 24/7 tekin: Oracle Cloud Always Free
+## 2. 24/7 serverda (Oracle Cloud Always Free yoki VPS)
 
-1. oracle.com/cloud/free → ro'yxatdan o'tish (Visa karta tasdiq uchun, pul yechilmaydi).
-2. Compute → Create instance → Ubuntu 22.04/24.04, shape **VM.Standard.E2.1.Micro** (Always Free).
-3. SSH bilan kirib:
+📖 To'liq qadamma-qadam qo'llanma: **[docs/SERVER.md](docs/SERVER.md)** (Oracle ro'yxatdan o'tish, VM yaratish, SSH, muammolar).
+
+Qisqasi — serverda (Ubuntu 24.04) bitta buyruq:
 ```bash
-sudo apt update && sudo apt install -y python3-venv git fonts-dejavu-core
-git clone <repo> ~/gamebozor && cd ~/gamebozor
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-cp .env.example .env && nano .env
+curl -fsSL https://raw.githubusercontent.com/abduquddus1990/gamebozor/main/deploy/setup_server.sh -o setup.sh && bash setup.sh
 ```
-4. Avtomatik ishga tushish (systemd):
-```bash
-sudo tee /etc/systemd/system/gamebozor.service <<EOF
-[Unit]
-Description=Gamebozor bot
-After=network-online.target
-[Service]
-WorkingDirectory=/home/ubuntu/gamebozor
-ExecStart=/home/ubuntu/gamebozor/.venv/bin/python -m bot
-Restart=always
-RestartSec=5
-[Install]
-WantedBy=multi-user.target
-EOF
-sudo systemctl enable --now gamebozor
-journalctl -u gamebozor -f     # loglar
-```
-Yangilash: `git pull && sudo systemctl restart gamebozor`. Xuddi shu yo'riqnoma $3–5 lik VPS uchun ham ishlaydi.
+Bot tokenini so'raydi, qolganini o'zi qiladi: paketlar, cloudflared, swap, kod, `.env`, systemd (24/7), kunlik zaxira.
+Yangilash: `bash ~/gamebozor/deploy/update.sh`. Loglar: `sudo journalctl -u gamebozor -f`.
+
+Windows kompyuterda tez ishga tushirish: `start_bot.bat` ni ikki marta bosing.
 
 ## 3. Yangi o'yin qo'shish
 
@@ -163,12 +147,14 @@ bot/
   services/render.py   e'lon kartochkasi matni
   services/banner.py   kanal uchun rasmli banner (Pillow)
   services/reputation.py sotuvchi reytingi
+  services/pro.py      💎 PRO tarif, avto-ko'tarish, eslatmalar
   services/listings.py moderatsiya, kanal
   handlers/            start (onboarding), dashboard, search, sell, my_listings, reviews, catalog, inline, admin
   web/server.py        Mini App API (initData tekshiruvi)
   web/tunnel.py        WEBAPP_URL=auto — tekin Cloudflare tunnel
   web/static/index.html Mini App interfeysi
-docs/                  suhbatlar jurnali (qarorlar tarixi)
+deploy/                setup_server.sh (bir buyruqli o'rnatish), update.sh
+docs/                  suhbatlar jurnali, SERVER.md (server qo'llanmasi)
 tests/test_flow.py     oflayn end-to-end test (bot + Mini App API)
 ```
 

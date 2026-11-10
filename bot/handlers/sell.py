@@ -20,6 +20,7 @@ from bot.keyboards import (confirm_kb, contact_kb, field_kb, games_kb, main_menu
                            skip_cancel_kb, type_kb, yes_no_kb)
 from bot.services.games import GAMES, active_games
 from bot.services.listings import approve, send_to_moderation, user_open_count
+from bot.services.pro import is_pro, listing_limit
 from bot.services.render import render_listing
 from bot.states import SellForm
 
@@ -38,8 +39,10 @@ async def sell_start(message: Message, state: FSMContext, session: AsyncSession,
     await state.clear()
     if not await require_rules(message, user, lang):
         return
-    if not is_admin and await user_open_count(session, user.id) >= config.free_listing_limit:
-        await message.answer(t(lang, "limit_reached", n=config.free_listing_limit))
+    limit = listing_limit(user)
+    if not is_admin and await user_open_count(session, user.id) >= limit:
+        hint = "" if is_pro(user) else t(lang, "pro_hint", n=config.pro_listing_limit)
+        await message.answer(t(lang, "limit_reached", n=limit) + hint)
         return
     if not user.username:
         await message.answer(t(lang, "need_username"))
@@ -293,6 +296,6 @@ async def sell_submit(call: CallbackQuery, state: FSMContext, session: AsyncSess
         await approve(bot, session, listing)
         await call.message.answer(t(lang, "published_admin", id=listing.id), reply_markup=main_menu(lang, True))
     else:
-        await send_to_moderation(bot, listing)
+        await send_to_moderation(bot, listing, pro=is_pro(user))
         await call.message.answer(t(lang, "submitted", id=listing.id), reply_markup=main_menu(lang, False))
     await call.answer()

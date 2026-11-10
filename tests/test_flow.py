@@ -318,6 +318,44 @@ async def main():
     assert "<s>1 500 000</s>" in last("EditMessageMedia")["media"]["caption"]
     print("---- PRICE DROP ----\n" + drop)
 
+    # 10c) 💎 PRO: xarid → bepul TOP → belgi → avto-ko'tarish
+    await feed(m(U_SELLER, "/pro"))
+    assert "PRO sotuvchi" in last("SendMessage", 2)["text"]
+    await feed(cb(U_SELLER, "pro:buy:30"))
+    inv = last("SendInvoice")
+    assert inv["payload"] == "pro30:2" and inv["prices"][0]["amount"] == 250 and inv["currency"] == "XTR"
+    await feed(Update(update_id=next(upd_ids), pre_checkout_query=PreCheckoutQuery(
+        id="pc2", from_user=U_SELLER, currency="XTR", total_amount=250, invoice_payload="pro30:2")))
+    assert last("AnswerPreCheckoutQuery")["ok"] is True
+    await feed(Update(update_id=next(upd_ids), pre_checkout_query=PreCheckoutQuery(
+        id="pc3", from_user=U_BUYER, currency="XTR", total_amount=250, invoice_payload="pro30:2")))
+    assert last("AnswerPreCheckoutQuery")["ok"] is False  # boshqa odamning PRO to'lovi
+    await feed(m(U_SELLER, successful_payment=SuccessfulPayment(
+        currency="XTR", total_amount=250, invoice_payload="pro30:2",
+        telegram_payment_charge_id="ch_pro", provider_payment_charge_id="")))
+    assert "PRO faollashtirildi" in last("SendMessage", 2)["text"]
+    await feed(cb(U_SELLER, "it:top:1"))
+    assert "it:topfree:1" in str(last("SendMessage", 2)["reply_markup"])
+    await feed(cb(U_SELLER, "it:topfree:1"))
+    assert "Bepul TOP ishlatildi" in last("SendMessage", 2)["text"]
+    await feed(cb(U_SELLER, "it:topfree:1"))
+    assert "qolmagan" in last("AnswerCallbackQuery")["text"]
+    await feed(m(U_BUYER, "/l1"))
+    assert "💎 PRO" in last("SendPhoto", 3)["caption"]
+
+    from datetime import timedelta as _td
+    from bot.db.base import Session as _S
+    from bot.db.models import Listing as _L
+    from bot.services.pro import bump_pro_listings
+    async with _S() as s:
+        lst = await s.get(_L, 1)
+        lst.approved_at = lst.approved_at - _td(days=3)
+        await s.commit()
+        assert await bump_pro_listings(s) == 1
+        assert await bump_pro_listings(s) == 0  # 48 soat o'tmaguncha qayta ko'tarilmaydi
+    await feed(m(U_ADMIN, "/givepro 3 7"))
+    assert "PRO активирован" in last("SendMessage", 3)["text"]
+
     # 11) Sotildi → banner «SOTILDI», bog'langan xaridordan baho so'raladi
     await feed(cb(U_SELLER, "it:sold:1"))
     assert "SOTILDI" in last("EditMessageMedia")["media"]["caption"]

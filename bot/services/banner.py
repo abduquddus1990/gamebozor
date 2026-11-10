@@ -109,7 +109,7 @@ def _thumb(photo: bytes | None, size: tuple[int, int]) -> Image.Image | None:
 
 
 def render_banner(listing: Listing, photo: bytes | None = None, verified: bool = False,
-                  rating: tuple[float, int] | None = None) -> bytes:
+                  rating: tuple[float, int] | None = None, pro: bool = False) -> bytes:
     game = GAMES.get(listing.game)
     img = _gradient()  # RGB: Draw(img, "RGBA") shaffof ranglarni aralashtiradi
     d = ImageDraw.Draw(img, "RGBA")
@@ -197,6 +197,8 @@ def render_banner(listing: Listing, photo: bytes | None = None, verified: bool =
     # --- Sotuvchi belgilari ---
     bx = left
     by = H - 56
+    if pro:
+        bx = _pill(d, (bx, by), "PRO", font(18, True), ACCENT) + 10
     if verified:
         bx = _pill(d, (bx, by), "TASDIQLANGAN SOTUVCHI", font(18, True), OK) + 10
     if rating:
@@ -233,7 +235,7 @@ async def make_banner(bot, session, listing: Listing) -> bytes | None:
                 photo = buf.read() if buf else None
             except Exception as e:  # noqa: BLE001
                 log.info("Skrinshotni yuklab bo'lmadi: %s", e)
-        return await asyncio.to_thread(render_banner, listing, photo, info.verified, info.rating)
+        return await asyncio.to_thread(render_banner, listing, photo, info.verified, info.rating, info.pro)
     except Exception as e:  # noqa: BLE001 — banner ixtiyoriy, kanal posti baribir chiqishi kerak
         log.exception("Banner chizilmadi: %s", e)
         return None

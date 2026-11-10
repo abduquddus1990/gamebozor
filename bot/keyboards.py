@@ -2,7 +2,7 @@ from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup, KeyboardB
                            SwitchInlineQueryChosenChat, WebAppInfo)
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from bot.callbacks import (AdminCb, AlertCb, DashCb, GuideCb, ItemCb, LangCb, ModCb, RevCb, SellCb, SrchCb,
+from bot.callbacks import (AdminCb, AlertCb, DashCb, GuideCb, ItemCb, LangCb, ModCb, ProCb, RevCb, SellCb, SrchCb,
                            TopCb)
 from bot.config import config
 from bot.i18n import PRICE_LABELS, REJECT_REASONS, t
@@ -92,6 +92,7 @@ def dash_home_kb(lang: str, is_admin: bool = False) -> InlineKeyboardMarkup:
         else:
             kb.button(text=t(lang, key), callback_data=DashCb(a=a).pack())
     kb.adjust(2)
+    kb.row(InlineKeyboardButton(text=t(lang, "d_pro"), callback_data=ProCb(a="menu").pack()))
     if config.webapp_url:
         kb.row(InlineKeyboardButton(text=t(lang, "d_webapp"),
                                     web_app=WebAppInfo(url=f"{config.webapp_url}/?lang={lang}")))
@@ -432,8 +433,10 @@ def owner_kb(lang: str, listing_id: int, status: str) -> InlineKeyboardMarkup:
     return kb.as_markup()
 
 
-def top_kb(lang: str, listing_id: int) -> InlineKeyboardMarkup:
+def top_kb(lang: str, listing_id: int, free_credits: int = 0) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
+    if free_credits:
+        kb.button(text=t(lang, "top_free") + f" ×{free_credits}", callback_data=ItemCb(a="topfree", id=listing_id).pack())
     kb.button(text=t(lang, "top_3d", n=config.top_3d_stars), callback_data=TopCb(id=listing_id, days=3).pack())
     kb.button(text=t(lang, "top_7d", n=config.top_7d_stars), callback_data=TopCb(id=listing_id, days=7).pack())
     kb.adjust(1)
@@ -492,4 +495,15 @@ def rate_kb(lang: str, listing_id: int, not_bought: bool = True) -> InlineKeyboa
 def review_skip_kb(lang: str, listing_id: int) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     kb.button(text=t(lang, "btn_skip"), callback_data=RevCb(a="skip", id=listing_id).pack())
+    return kb.as_markup()
+
+
+# ---------- 💎 PRO ----------
+def pro_kb(lang: str) -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(lang, "pro_buy_30", n=config.pro_30d_stars), callback_data=ProCb(a="buy", days=30).pack())
+    kb.button(text=t(lang, "pro_buy_90", n=config.pro_90d_stars), callback_data=ProCb(a="buy", days=90).pack())
+    kb.button(text=t(lang, "d_my"), callback_data=DashCb(a="my").pack())
+    kb.button(text=t(lang, "d_home"), callback_data=DashCb(a="home").pack())
+    kb.adjust(1, 1, 2)
     return kb.as_markup()

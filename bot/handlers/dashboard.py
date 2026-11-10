@@ -23,6 +23,7 @@ from bot.keyboards import (back_kb, dash_game_kb, dash_games_kb, dash_home_kb, d
                            main_menu, profile_kb, rules_kb)
 from bot.services.games import GAMES
 from bot.services.render import fmt_price, utcnow
+from bot.services.pro import is_pro, status_text
 from bot.services.search import market_stats
 
 router = Router(name="dashboard")
@@ -214,7 +215,8 @@ async def cb_profile(call: CallbackQuery, session: AsyncSession, user: User, lan
     from bot.handlers.reviews import reviews_block
     ref = f"https://t.me/{config.bot_username}?start=r_{user.id}"
     text = t(lang, "dash_profile", id=user.id, username=f"@{escape(user.username)}" if user.username else "",
-             badge=t(lang, "badge_verified" if user.is_verified else "badge_none"),
+             badge=t(lang, "badge_verified" if user.is_verified else "badge_none")
+             + ("\n" + status_text(user, lang) if is_pro(user) else ""),
              rating=await reviews_block(session, user.id, lang, limit=0),
              active=by_status.get("active", 0), pending=by_status.get("pending", 0), sold=by_status.get("sold", 0),
              views=views, favs=favs, alerts=alerts,

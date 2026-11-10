@@ -27,6 +27,12 @@ class Config:
     top_3d_stars: int = int(os.getenv("TOP_3D_STARS", "50"))
     top_7d_stars: int = int(os.getenv("TOP_7D_STARS", "100"))
 
+    # 💎 PRO sotuvchi tarifi (Telegram Stars)
+    pro_30d_stars: int = int(os.getenv("PRO_30D_STARS", "250"))
+    pro_90d_stars: int = int(os.getenv("PRO_90D_STARS", "600"))
+    pro_listing_limit: int = int(os.getenv("PRO_LISTING_LIMIT", "20"))
+    pro_bump_hours: int = int(os.getenv("PRO_BUMP_HOURS", "48"))  # PRO e'lonlar har N soatda avtomatik ko'tariladi
+
     max_photos: int = 10
 
     # Mini App (vitrina). Bo'sh bo'lsa — o'chiq. HTTPS manzil kerak (masalan Cloudflare Tunnel).

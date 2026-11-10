@@ -12,6 +12,7 @@ class SellerInfo:
     verified: bool = False
     avg: float = 0.0
     count: int = 0
+    pro: bool = False
 
     @property
     def rating(self) -> tuple[float, int] | None:
@@ -22,7 +23,9 @@ async def seller_info(session: AsyncSession, seller_id: int) -> SellerInfo:
     user = await session.get(User, seller_id)
     avg, cnt = (await session.execute(
         select(func.avg(Review.rating), func.count(Review.id)).where(Review.seller_id == seller_id))).one()
-    return SellerInfo(bool(user and user.is_verified), round(float(avg or 0), 1), int(cnt or 0))
+    from bot.services.pro import is_pro
+
+    return SellerInfo(bool(user and user.is_verified), round(float(avg or 0), 1), int(cnt or 0), is_pro(user))
 
 
 def stars(avg: float) -> str:

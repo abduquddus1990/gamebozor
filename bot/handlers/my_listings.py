@@ -8,15 +8,17 @@ from aiogram.types import CallbackQuery, LabeledPrice, Message, PreCheckoutQuery
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.callbacks import ItemCb, TopCb
+from bot.callbacks import ItemCb, ProCb, TopCb
 from bot.config import config
 from bot.db.models import Listing, Payment, User
 from bot.handlers.reviews import ask_buyers_after_sale
 from bot.i18n import MENU_TEXTS, all_variants, t
-from bot.keyboards import my_list_kb, owner_kb, top_kb
+from bot.handlers.common import show_screen
+from bot.keyboards import my_list_kb, owner_kb, pro_kb, top_kb
 from bot.services.alerts import notify_price_drop
 from bot.services.listings import publish_to_channel, update_channel_post
 from bot.services.render import fmt_price, render_listing, utcnow
+from bot.services.pro import activate, fmt_date, is_pro, pro_screen
 from bot.states import PriceEdit
 
 router = Router(name="my_listings")
@@ -126,8 +128,40 @@ async def top_menu(call: CallbackQuery, callback_data: ItemCb, session: AsyncSes
     if not listing or listing.status != "active":
         await call.answer(t(lang, "top_only_active"), show_alert=True)
         return
-    await call.message.answer(t(lang, "top_choose"), reply_markup=top_kb(lang, listing.id))
+    await call.message.answer(t(lang, "top_choose"),
+                              reply_markup=top_kb(lang, listing.id, user.pro_top_credits or 0))
     await call.answer()
+
+
+def _until(dt) -> str:
+    return (dt + timedelta(hours=5)).strftime("%d.%m %H:%M")  # Toshkent vaqti
+
+
+def _extend_top(listing: Listing, days: int) -> None:
+    now = utcnow()
+    base = listing.top_until if listing.top_until and listing.top_until > now else now
+    listing.top_until = base + timedelta(days=days)
+
+
+@router.callback_query(ItemCb.filter(F.a == "topfree"))
+async def top_free(call: CallbackQuery, callback_data: ItemCb, session: AsyncSession, bot: Bot, user: User,
+                   lang: str) -> None:
+    """💎 PRO bilan berilgan bepul TOP (3 kun)."""
+    listing = await _own(session, callback_data.id, user.id)
+    if not listing or listing.status != "active":
+        await call.answer(t(lang, "top_only_active"), show_alert=True)
+        return
+    if not user.pro_top_credits:
+        await call.answer(t(lang, "top_free_none"), show_alert=True)
+        return
+    await call.answer("🔥")
+    user.pro_top_credits -= 1
+    _extend_top(listing, 3)
+    await session.commit()
+    await call.message.edit_reply_markup(reply_markup=None)
+    await call.message.answer(t(lang, "top_free_done", id=listing.id, until=_until(listing.top_until),
+                                left=user.pro_top_credits))
+    await publish_to_channel(bot, session, listing)
 
 
 @router.callback_query(TopCb.filter())
@@ -149,13 +183,43 @@ async def top_invoice(call: CallbackQuery, callback_data: TopCb, session: AsyncS
     await call.answer()
 
 
+# ---------- 💎 PRO tarif ----------
+@router.message(Command("pro"))
+async def pro_cmd(message: Message, state: FSMContext, user: User, lang: str) -> None:
+    await state.set_state(None)
+    await message.answer(pro_screen(user, lang), reply_markup=pro_kb(lang))
+
+
+@router.callback_query(ProCb.filter(F.a == "menu"))
+async def pro_menu(call: CallbackQuery, user: User, lang: str) -> None:
+    await show_screen(call, pro_screen(user, lang), pro_kb(lang))
+    await call.answer()
+
+
+@router.callback_query(ProCb.filter(F.a == "buy"))
+async def pro_invoice(call: CallbackQuery, callback_data: ProCb, user: User, lang: str) -> None:
+    days = 90 if callback_data.days == 90 else 30
+    stars = config.pro_90d_stars if days == 90 else config.pro_30d_stars
+    title = f"💎 PRO — {days} " + ("дней" if lang == "ru" else "kun")
+    desc = t(lang, "pro_extend_note") if is_pro(user) else "Gamebozor PRO"
+    await call.message.answer_invoice(title=title, description=desc, payload=f"pro{days}:{user.id}",
+                                      currency="XTR", prices=[LabeledPrice(label=title, amount=stars)],
+                                      provider_token="")
+    await call.answer()
+
+
+# ---------- To'lov tekshiruvi va qabul qilish ----------
 @router.pre_checkout_query()
 async def pre_checkout(query: PreCheckoutQuery, session: AsyncSession) -> None:
     try:
-        kind, lid = query.invoice_payload.split(":")
-        listing = await session.get(Listing, int(lid))
-        ok = kind in ("top3", "top7") and listing and listing.status == "active" \
-            and listing.seller_id == query.from_user.id
+        kind, ref = query.invoice_payload.split(":")
+        if kind in ("top3", "top7"):
+            listing = await session.get(Listing, int(ref))
+            ok = bool(listing and listing.status == "active" and listing.seller_id == query.from_user.id)
+        elif kind in ("pro30", "pro90"):
+            ok = int(ref) == query.from_user.id
+        else:
+            ok = False
     except (ValueError, AttributeError):
         ok = False
     if ok:
@@ -164,26 +228,38 @@ async def pre_checkout(query: PreCheckoutQuery, session: AsyncSession) -> None:
         await query.answer(ok=False, error_message="E'lon faol emas / Объявление неактивно")
 
 
+async def _notify_admins(bot: Bot, text: str) -> None:
+    for admin_id in config.admin_ids:
+        try:
+            await bot.send_message(admin_id, text)
+        except Exception:  # noqa: BLE001
+            pass
+
+
 @router.message(F.successful_payment)
 async def paid(message: Message, session: AsyncSession, bot: Bot, user: User, lang: str) -> None:
     sp = message.successful_payment
-    kind, lid = sp.invoice_payload.split(":")
+    kind, ref = sp.invoice_payload.split(":")
+    charge = sp.telegram_payment_charge_id
+
+    if kind.startswith("pro"):
+        days = 90 if kind == "pro90" else 30
+        session.add(Payment(user_id=user.id, listing_id=0, product=kind, amount=sp.total_amount, charge_id=charge))
+        activate(user, days)
+        await session.commit()
+        await message.answer(t(lang, "pro_done", until=fmt_date(user.pro_until), credits=user.pro_top_credits))
+        await _notify_admins(bot, f"💎 +{sp.total_amount} ⭐️ | PRO {days} kun | user {user.id}\n"
+                                  f"charge: <code>{charge}</code>")
+        return
+
     days = 3 if kind == "top3" else 7
-    session.add(Payment(user_id=user.id, listing_id=int(lid), product=kind, amount=sp.total_amount,
-                        charge_id=sp.telegram_payment_charge_id))
-    listing = await session.get(Listing, int(lid))
-    now = utcnow()
-    base = listing.top_until if listing.top_until and listing.top_until > now else now
-    listing.top_until = base + timedelta(days=days)
+    session.add(Payment(user_id=user.id, listing_id=int(ref), product=kind, amount=sp.total_amount, charge_id=charge))
+    listing = await session.get(Listing, int(ref))
+    _extend_top(listing, days)
     await session.commit()
 
     # Kanalda 🔥 TOP sifatida qayta chiqaramiz (bump)
     await publish_to_channel(bot, session, listing)
-    until = (listing.top_until + timedelta(hours=5)).strftime("%d.%m %H:%M")  # Toshkent vaqti
-    await message.answer(t(lang, "top_done", id=listing.id, until=until))
-    for admin_id in config.admin_ids:
-        try:
-            await bot.send_message(admin_id, f"💰 +{sp.total_amount} ⭐️ | TOP{days} #{listing.id} | user {user.id}\n"
-                                             f"charge: <code>{sp.telegram_payment_charge_id}</code>")
-        except Exception:  # noqa: BLE001
-            pass
+    await message.answer(t(lang, "top_done", id=listing.id, until=_until(listing.top_until)))
+    await _notify_admins(bot, f"💰 +{sp.total_amount} ⭐️ | TOP{days} #{listing.id} | user {user.id}\n"
+                              f"charge: <code>{charge}</code>")

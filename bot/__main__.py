@@ -21,7 +21,8 @@ COMMANDS = {
     "uz": [
         ("menu", "🏠 Dashboard"), ("search", "🔎 Qidiruv (masalan: /search messi)"),
         ("catalog", "🛒 Akkauntlar katalogi"), ("topup", "🪙 Coin / UC xizmatlari"),
-        ("sell", "➕ E'lon berish"), ("my", "📂 Mening e'lonlarim"), ("fav", "❤️ Saralanganlar"),
+        ("sell", "➕ E'lon berish"), ("my", "📂 Mening e'lonlarim"), ("pro", "💎 PRO sotuvchi tarifi"),
+        ("fav", "❤️ Saralanganlar"),
         ("alerts", "🔔 Qidiruv obunalarim"), ("check", "🛡 Sotuvchini tekshirish"),
         ("rules", "📜 Qoidalar"), ("safety", "🛡 Xavfsiz savdo"), ("guide", "📖 Qo'llanma"),
         ("commands", "⌨️ Barcha buyruqlar"), ("lang", "🌐 Til"), ("help", "ℹ️ Yordam"),
@@ -30,7 +31,8 @@ COMMANDS = {
     "ru": [
         ("menu", "🏠 Dashboard"), ("search", "🔎 Поиск (например: /search messi)"),
         ("catalog", "🛒 Каталог аккаунтов"), ("topup", "🪙 Услуги Coin / UC"),
-        ("sell", "➕ Подать объявление"), ("my", "📂 Мои объявления"), ("fav", "❤️ Избранное"),
+        ("sell", "➕ Подать объявление"), ("my", "📂 Мои объявления"), ("pro", "💎 Тариф PRO"),
+        ("fav", "❤️ Избранное"),
         ("alerts", "🔔 Мои подписки на поиск"), ("check", "🛡 Проверить продавца"),
         ("rules", "📜 Правила"), ("safety", "🛡 Безопасная сделка"), ("guide", "📖 Руководство"),
         ("commands", "⌨️ Все команды"), ("lang", "🌐 Язык"), ("help", "ℹ️ Помощь"),
@@ -41,7 +43,7 @@ ADMIN_COMMANDS = [
     ("admin", "🛠 Admin panel"), ("ban", "ID — bloklash"), ("unban", "ID — blokdan chiqarish"),
     ("verify", "ID — ✅ tasdiqlangan sotuvchi"), ("blacklist", "@user izoh — qora ro'yxat"),
     ("unblacklist", "@user — qora ro'yxatdan olish"), ("refund", "CHARGE_ID — Stars qaytarish"),
-    ("delreview", "ID — soxta sharhni o'chirish"),
+    ("delreview", "ID — soxta sharhni o'chirish"), ("givepro", "ID KUN — PRO berish"),
 ]
 
 # Bo'sh chatda ko'rinadigan matn («Bu bot nima qila oladi?») — shu bo'lsa Telegram
@@ -133,11 +135,15 @@ async def main() -> None:
                     except TelegramAPIError:
                         pass
 
+    from bot.services.pro import pro_worker
+    worker = asyncio.create_task(pro_worker(bot))  # PRO: avto-ko'tarish va eslatmalar
+
     await bot.delete_webhook(drop_pending_updates=True)
     logging.info("Gamebozor bot ishga tushdi")
     try:
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
+        worker.cancel()
         if tunnel and tunnel.returncode is None:
             tunnel.kill()
         if runner:

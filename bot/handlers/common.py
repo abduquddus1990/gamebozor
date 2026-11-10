@@ -55,7 +55,7 @@ async def listing_caption(session: AsyncSession, listing: Listing, lang: str) ->
     from bot.services.reputation import seller_info
 
     info = await seller_info(session, listing.seller_id)
-    return render_listing(listing, lang, verified=info.verified, rating=info.rating)
+    return render_listing(listing, lang, verified=info.verified, rating=info.rating, pro=info.pro)
 
 
 async def show_single(bot: Bot, chat_id: int, session: AsyncSession, listing_id: int, lang: str,

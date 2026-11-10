@@ -22,6 +22,7 @@ undan oshsa PostgreSQL JSONB indekslariga o'tkaziladi.
 from __future__ import annotations
 
 import re
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -197,7 +198,9 @@ def sort_listings(items: list[Listing], f: dict) -> list[Listing]:
         return 0 if (l.top_until and l.top_until > now) else 1
 
     def newest(l: Listing):
-        return (l.approved_at or l.created_at or now, l.id)
+        # PRO avto-ko'tarilgan e'lon «yangi» kabi yuqoriga chiqadi
+        seen = max(d for d in (l.approved_at, l.bumped_at, l.created_at, datetime.min) if d)
+        return (seen, l.id)
 
     sort = f.get("sort", "top")
     if sort == "cheap":

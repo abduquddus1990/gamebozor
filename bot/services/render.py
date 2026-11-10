@@ -33,7 +33,7 @@ def is_top(listing: Listing) -> bool:
 
 
 def render_listing(listing: Listing, lang: str = "uz", for_channel: bool = False, verified: bool = False,
-                   rating: tuple[float, int] | None = None) -> str:
+                   rating: tuple[float, int] | None = None, pro: bool = False) -> str:
     game = GAMES.get(listing.game)
     ru = lang == "ru"
     lines: list[str] = []
@@ -74,6 +74,8 @@ def render_listing(listing: Listing, lang: str = "uz", for_channel: bool = False
         lines.append(f"\n📝 {escape(listing.description, quote=False)}")
 
     seller_bits = []
+    if pro:
+        seller_bits.append("💎 PRO")
     if verified:
         seller_bits.append("✅ " + ("Проверенный продавец" if ru else "Tasdiqlangan sotuvchi"))
     if rating:

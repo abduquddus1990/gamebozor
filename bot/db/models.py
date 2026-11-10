@@ -24,7 +24,10 @@ class User(Base):
     is_banned: Mapped[bool] = mapped_column(default=False)
     is_verified: Mapped[bool] = mapped_column(default=False)  # ✅ tasdiqlangan sotuvchi
     rules_accepted_at: Mapped[datetime | None] = mapped_column(DateTime)  # qoidalarga rozilik
-    search: Mapped[dict | None] = mapped_column(JSON)  # joriy qidiruv filtrlari (restartdan keyin ham saqlanadi)
+    search: Mapped[dict | None] = mapped_column(JSON)
+    pro_until: Mapped[datetime | None] = mapped_column(DateTime)  # 💎 PRO tarif muddati
+    pro_top_credits: Mapped[int | None] = mapped_column(Integer)  # PRO bilan beriladigan bepul TOP (3 kun)
+    pro_reminded: Mapped[bool | None] = mapped_column()  # muddat tugashi haqida eslatildi  # joriy qidiruv filtrlari (restartdan keyin ham saqlanadi)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     listings: Mapped[list["Listing"]] = relationship(back_populates="seller")
@@ -52,6 +55,7 @@ class Listing(Base):
     views: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), index=True)
     approved_at: Mapped[datetime | None] = mapped_column(DateTime)
+    bumped_at: Mapped[datetime | None] = mapped_column(DateTime)  # PRO avto-ko'tarish vaqti
 
     seller: Mapped[User] = relationship(back_populates="listings")
 

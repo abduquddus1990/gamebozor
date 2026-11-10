@@ -263,3 +263,25 @@ async def delreview(message: Message, command: CommandObject, session: AsyncSess
     await session.delete(review)
     await session.commit()
     await message.answer(f"🗑 Sharh #{arg} o'chirildi ({review.rating}⭐️, sotuvchi {review.seller_id}).")
+
+
+@router.message(Command("givepro"))
+async def givepro(message: Message, command: CommandObject, session: AsyncSession, bot: Bot) -> None:
+    """PRO ni qo'lda berish (sinov, hamkorlar, shop kanal egalari): /givepro ID KUN"""
+    from bot.services.pro import activate, fmt_date
+
+    parts = (command.args or "").split()
+    if len(parts) != 2 or not all(p.isdigit() for p in parts):
+        await message.answer("Format: /givepro ID KUN   (masalan: /givepro 123456789 30)")
+        return
+    u = await session.get(User, int(parts[0]))
+    if not u:
+        await message.answer("Foydalanuvchi topilmadi (botga /start bosganmi?).")
+        return
+    activate(u, int(parts[1]), top_credits=0)
+    await session.commit()
+    await message.answer(f"💎 {u.id}: PRO {fmt_date(u.pro_until)} gacha.")
+    try:
+        await bot.send_message(u.id, t(u.lang, "pro_done", until=fmt_date(u.pro_until), credits=u.pro_top_credits or 0))
+    except TelegramAPIError:
+        pass

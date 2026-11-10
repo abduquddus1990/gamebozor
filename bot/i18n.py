@@ -97,7 +97,7 @@ TEXTS: dict[str, dict[str, str]] = {
             "⌨️ <b>Buyruqlar</b>\n\n"
             "/menu — 🏠 Dashboard\n/search <i>so'z</i> — 🔎 qidiruv (masalan: <code>/search messi 3200</code>)\n"
             "/catalog — 🛒 akkauntlar katalogi\n/topup — 🪙 Coin / UC xizmatlari\n/sell — ➕ e'lon berish\n"
-            "/my — 📂 mening e'lonlarim\n/fav — ❤️ saralanganlar\n/alerts — 🔔 obunalarim\n"
+            "/pro — 💎 PRO sotuvchi tarifi\n/my — 📂 mening e'lonlarim\n/fav — ❤️ saralanganlar\n/alerts — 🔔 obunalarim\n"
             "/check <i>@username</i> — 🛡 sotuvchini tekshirish\n/rules — 📜 qoidalar\n/safety — 🛡 xavfsizlik\n"
             "/guide — 📖 qo'llanma\n/lang — 🌐 til\n/help — ℹ️ yordam\n/paysupport — 💬 to'lov bo'yicha yordam\n"
             "/l<i>123</i> — e'lonni raqami bo'yicha ochish\n\n"
@@ -308,6 +308,33 @@ TEXTS: dict[str, dict[str, str]] = {
         "check_member": "Botda: {listings} ta e'lon, {sold} ta sotilgan{verified}",
         "verified": ", ✅ tasdiqlangan sotuvchi",
         "banned": "⛔️ Siz bloklangansiz.",
+        # 💎 PRO tarif
+        "d_pro": "💎 PRO tarif",
+        "pro_screen": (
+            "💎 <b>PRO sotuvchi</b>\n━━━━━━━━━━━━━━━━━━━━\n{status}\n━━━━━━━━━━━━━━━━━━━━\n"
+            "<b>PRO imkoniyatlari:</b>\n"
+            "📂 <b>{limit}</b> tagacha faol e'lon (tekin tarifda: {free})\n"
+            "🔄 E'lonlaringiz har <b>{hours} soatda</b> avtomatik ro'yxat boshiga ko'tariladi\n"
+            "🎁 Har bir xaridga <b>1 ta bepul TOP</b> (3 kun, kanalda 🔥 bilan qayta chiqadi)\n"
+            "💎 E'lonlarda va kanal bannerida «PRO» belgisi — xaridor ishonchi oshadi\n"
+            "⚡️ Moderatsiyada ustuvorlik\n━━━━━━━━━━━━━━━━━━━━\n"
+            "<b>Narxlar (Telegram Stars):</b>\n• 30 kun — {p30} ⭐️\n• 90 kun — {p90} ⭐️ (tejamkor)\n\n"
+            "ℹ️ PRO — e'lonlarni ko'rinarliroq qiladigan raqamli xizmat, sotilishini kafolatlamaydi. "
+            "Biz garant emasmiz. To'lov bo'yicha: /paysupport"
+        ),
+        "pro_status_on": "✅ Faol: <b>{until}</b> gacha · 🎁 bepul TOP: {credits}",
+        "pro_status_off": "▫️ Hozir: tekin tarif",
+        "pro_buy_30": "💎 30 kun — {n} ⭐️",
+        "pro_buy_90": "💎 90 kun — {n} ⭐️",
+        "pro_extend_note": "Muddat qo'shiladi (uzaytiriladi).",
+        "pro_done": "🎉 <b>PRO faollashtirildi</b> — {until} gacha!\n🎁 Bepul TOP: {credits} ta → 📂 Mening e'lonlarim → 🚀 TOP qilish",
+        "pro_badge": "💎 PRO sotuvchi",
+        "pro_reminder": "⏳ PRO tarifingiz <b>{until}</b> da tugaydi. Uzaytirish: /pro",
+        "pro_expired": "▫️ PRO muddati tugadi. E'lonlaringiz saqlandi, lekin yangi e'lonlar limiti — {free} ta. Qayta yoqish: /pro",
+        "pro_hint": "\n\n💎 PRO tarifda {n} tagacha e'lon: /pro",
+        "top_free": "🎁 Bepul TOP — 3 kun (PRO)",
+        "top_free_done": "🔥 Bepul TOP ishlatildi: #{id} {until} gacha TOP da! Qolgan bepul TOP: {left}",
+        "top_free_none": "Bepul TOP qolmagan.",
         # narx o'zgartirish / narx tushishi
         "btn_price_edit": "✏️ Narxni o'zgartirish",
         "ask_new_price": "💵 #{id} uchun yangi narxni yozing (hozirgi: {price} so'm):",
@@ -425,7 +452,7 @@ TEXTS: dict[str, dict[str, str]] = {
             "⌨️ <b>Команды</b>\n\n"
             "/menu — 🏠 Dashboard\n/search <i>слово</i> — 🔎 поиск (например: <code>/search messi 3200</code>)\n"
             "/catalog — 🛒 каталог аккаунтов\n/topup — 🪙 услуги Coin / UC\n/sell — ➕ подать объявление\n"
-            "/my — 📂 мои объявления\n/fav — ❤️ избранное\n/alerts — 🔔 мои подписки\n"
+            "/pro — 💎 тариф PRO\n/my — 📂 мои объявления\n/fav — ❤️ избранное\n/alerts — 🔔 мои подписки\n"
             "/check <i>@username</i> — 🛡 проверить продавца\n/rules — 📜 правила\n/safety — 🛡 безопасность\n"
             "/guide — 📖 руководство\n/lang — 🌐 язык\n/help — ℹ️ помощь\n/paysupport — 💬 поддержка по оплатам\n"
             "/l<i>123</i> — открыть объявление по номеру\n\n"
@@ -626,6 +653,32 @@ TEXTS: dict[str, dict[str, str]] = {
         "check_member": "В боте: {listings} объявл., продано {sold}{verified}",
         "verified": ", ✅ проверенный продавец",
         "banned": "⛔️ Вы заблокированы.",
+        "d_pro": "💎 Тариф PRO",
+        "pro_screen": (
+            "💎 <b>PRO продавец</b>\n━━━━━━━━━━━━━━━━━━━━\n{status}\n━━━━━━━━━━━━━━━━━━━━\n"
+            "<b>Возможности PRO:</b>\n"
+            "📂 До <b>{limit}</b> активных объявлений (бесплатно: {free})\n"
+            "🔄 Объявления автоматически поднимаются в начало списка каждые <b>{hours} ч</b>\n"
+            "🎁 <b>1 бесплатный TOP</b> за каждую покупку (3 дня, повторная публикация в канале с 🔥)\n"
+            "💎 Значок «PRO» в объявлениях и на баннере канала — больше доверия покупателей\n"
+            "⚡️ Приоритет на модерации\n━━━━━━━━━━━━━━━━━━━━\n"
+            "<b>Цены (Telegram Stars):</b>\n• 30 дней — {p30} ⭐️\n• 90 дней — {p90} ⭐️ (выгодно)\n\n"
+            "ℹ️ PRO — цифровая услуга для повышения видимости, продажу не гарантирует. "
+            "Мы не гарант. Вопросы по оплате: /paysupport"
+        ),
+        "pro_status_on": "✅ Активен до <b>{until}</b> · 🎁 бесплатных TOP: {credits}",
+        "pro_status_off": "▫️ Сейчас: бесплатный тариф",
+        "pro_buy_30": "💎 30 дней — {n} ⭐️",
+        "pro_buy_90": "💎 90 дней — {n} ⭐️",
+        "pro_extend_note": "Срок будет добавлен (продлён).",
+        "pro_done": "🎉 <b>PRO активирован</b> — до {until}!\n🎁 Бесплатных TOP: {credits} → 📂 Мои объявления → 🚀 Поднять в TOP",
+        "pro_badge": "💎 PRO продавец",
+        "pro_reminder": "⏳ Ваш PRO заканчивается <b>{until}</b>. Продлить: /pro",
+        "pro_expired": "▫️ Срок PRO истёк. Объявления сохранены, но лимит новых — {free}. Включить снова: /pro",
+        "pro_hint": "\n\n💎 В тарифе PRO — до {n} объявлений: /pro",
+        "top_free": "🎁 Бесплатный TOP — 3 дня (PRO)",
+        "top_free_done": "🔥 Бесплатный TOP использован: #{id} в TOP до {until}! Осталось бесплатных TOP: {left}",
+        "top_free_none": "Бесплатных TOP не осталось.",
         "btn_price_edit": "✏️ Изменить цену",
         "ask_new_price": "💵 Новая цена для #{id} (сейчас: {price} сум):",
         "price_updated": "✅ Цена #{id} обновлена: {old} → <b>{new}</b> сум",

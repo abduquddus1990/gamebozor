@@ -24,8 +24,8 @@ async def user_open_count(session: AsyncSession, user_id: int) -> int:
     return await session.scalar(stmt) or 0
 
 
-async def send_to_moderation(bot: Bot, listing: Listing) -> None:
-    text = render_listing(listing, "uz") + f"\n\n👤 Sotuvchi: <a href='tg://user?id={listing.seller_id}'>{listing.seller_id}</a>"
+async def send_to_moderation(bot: Bot, listing: Listing, pro: bool = False) -> None:
+    text = ("💎 <b>PRO — ustuvor</b>\n" if pro else "") + render_listing(listing, "uz") + f"\n\n👤 Sotuvchi: <a href='tg://user?id={listing.seller_id}'>{listing.seller_id}</a>"
     for admin_id in config.admin_ids:
         try:
             if len(listing.photos) > 1:
@@ -38,7 +38,7 @@ async def send_to_moderation(bot: Bot, listing: Listing) -> None:
 async def _channel_caption(session: AsyncSession, listing: Listing) -> str:
     info = await seller_info(session, listing.seller_id)
     return render_listing(listing, "uz", for_channel=listing.status == "active", verified=info.verified,
-                          rating=info.rating)
+                          rating=info.rating, pro=info.pro)
 
 
 async def _channel_photo(bot: Bot, session: AsyncSession, listing: Listing):

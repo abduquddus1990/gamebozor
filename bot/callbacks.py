@@ -63,3 +63,8 @@ class RevCb(CallbackData, prefix="rv"):
     a: str
     id: int
     v: int = 0
+
+
+class ProCb(CallbackData, prefix="pro"):
+    a: str  # menu | buy
+    days: int = 0
