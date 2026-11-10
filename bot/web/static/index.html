@@ -50,6 +50,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .stats{display:flex;flex-wrap:wrap;gap:4px}
 .st{font-size:11px;padding:2px 6px;border-radius:7px;background:rgba(124,92,255,.15);color:var(--text)}
 .ver{color:var(--ok);font-size:12px;font-weight:600}
+.old{color:var(--hot);font-size:12px;font-weight:600}
 .sk{border-radius:var(--r);aspect-ratio:3/4;background:linear-gradient(90deg,var(--bg2) 25%,rgba(127,127,127,.15) 50%,var(--bg2) 75%);
   background-size:200% 100%;animation:sh 1.2s infinite}
 @keyframes sh{to{background-position:-200% 0}}
@@ -190,7 +191,8 @@ function card(it) {
       ${it.top ? '<span class="tag">🔥 TOP</span>' : ''}${it.photos > 1 ? `<span class="cnt">🖼 ${it.photos}</span>` : ''}</div>
     <div class="cb"><div class="price">${it.kind==='topup'?(L==='ru'?'от ':''):''}${fmt(it.price)} <small>${T().som}${it.kind==='topup'&&L!=='ru'?' dan':''}${it.negotiable?' · 🤝':''}</small></div>
       <div class="title">${it.emoji} ${esc(it.title)}</div><div class="stats">${stats}</div>
-      ${it.verified ? '<div class="ver">✅ verified</div>' : ''}</div></button>`;
+      ${it.oldPrice ? `<div class="old">📉 <s>${fmt(it.oldPrice)}</s></div>` : ''}
+      ${it.verified || it.rating ? `<div class="ver">${it.verified ? '✅' : ''}${it.rating ? ` ⭐️ ${it.rating.toFixed(1)} (${it.reviews})` : ''}</div>` : ''}</div></button>`;
 }
 
 function skeleton(n) { return Array.from({length:n}, () => '<div class="sk"></div>').join(""); }
@@ -284,7 +286,9 @@ function openDetail(id) {
     <div class="dtitle">${it.top ? '🔥 ' : ''}${it.emoji} ${esc(it.title)}</div>
     <div class="price">${fmt(it.price)} <small>${T().som}${it.negotiable ? ' · 🤝 ' + T().neg : ''}</small></div>
     <div class="meta" style="margin:4px 0"><span>#${it.id} · ${esc(it.gameName)}</span><span>👁 ${it.views} ${T().views}</span></div>
+    ${it.oldPrice ? `<div class="old">📉 <s>${fmt(it.oldPrice)}</s> → ${fmt(it.price)}</div>` : ''}
     ${it.verified ? '<div class="ver">✅ verified seller</div>' : ''}
+    ${it.rating ? `<div class="ver" style="color:#f5b301">⭐️ ${it.rating.toFixed(1)} / 5 · ${it.reviews}</div>` : ''}
     <div class="kv">${kv}</div>
     ${it.description ? `<div class="desc">${esc(it.description)}</div>` : ''}
     <div class="acts"><button class="b1" id="dopen">${T().open}</button><button class="b2" id="dshare">${T().share}</button></div>

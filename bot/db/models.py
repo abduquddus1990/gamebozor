@@ -38,6 +38,7 @@ class Listing(Base):
     game: Mapped[str] = mapped_column(String(32), index=True)  # 'efootball', 'pubgm' ...
     title: Mapped[str] = mapped_column(String(120))
     price: Mapped[int] = mapped_column(BigInteger, index=True)  # so'mda
+    old_price: Mapped[int | None] = mapped_column(BigInteger)  # narx tushganda eski narx (chizilgan holda ko'rsatiladi)
     negotiable: Mapped[bool] = mapped_column(default=False)
     data: Mapped[dict] = mapped_column(JSON, default=dict)  # o'yinga xos maydonlar
     description: Mapped[str] = mapped_column(Text, default="")
@@ -107,4 +108,29 @@ class SavedSearch(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(BigInteger, index=True)
     filters: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class ContactLog(Base):
+    """Xaridor «📞 Bog'lanish» ni bosgani — sharh qoldirish huquqi shundan kelib chiqadi."""
+    __tablename__ = "contact_logs"
+    __table_args__ = (UniqueConstraint("user_id", "listing_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    listing_id: Mapped[int] = mapped_column(Integer, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class Review(Base):
+    """⭐️ Sotuvchiga sharh: faqat shu e'lon bo'yicha bog'langan xaridor, bitta e'longa bitta sharh."""
+    __tablename__ = "reviews"
+    __table_args__ = (UniqueConstraint("listing_id", "buyer_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    listing_id: Mapped[int] = mapped_column(Integer, index=True)
+    seller_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    buyer_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    rating: Mapped[int] = mapped_column(Integer)  # 1..5
+    text: Mapped[str] = mapped_column(String(300), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

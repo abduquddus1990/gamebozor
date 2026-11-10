@@ -27,3 +27,11 @@ class BroadcastForm(StatesGroup):
 
 class SearchInput(StatesGroup):
     value = State()  # qidiruv filtri uchun matn kiritish (narx, raqam, so'z)
+
+
+class PriceEdit(StatesGroup):
+    value = State()  # e'lon egasi yangi narxni yozadi
+
+
+class ReviewForm(StatesGroup):
+    text = State()  # baho qo'yilgandan keyin ixtiyoriy izoh

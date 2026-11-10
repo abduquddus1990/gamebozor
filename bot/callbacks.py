@@ -56,3 +56,10 @@ class ModCb(CallbackData, prefix="mod"):
 
 class AdminCb(CallbackData, prefix="adm"):
     a: str  # stats | pending | broadcast | sources
+
+
+class RevCb(CallbackData, prefix="rv"):
+    """Sharh: a=ask (baholash oynasi) | r (baho, v=1..5) | no (sotib olmadim) | skip (izohsiz)."""
+    a: str
+    id: int
+    v: int = 0

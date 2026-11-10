@@ -11,10 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.callbacks import ItemCb, TopCb
 from bot.config import config
 from bot.db.models import Listing, Payment, User
-from bot.i18n import all_variants, t
+from bot.handlers.reviews import ask_buyers_after_sale
+from bot.i18n import MENU_TEXTS, all_variants, t
 from bot.keyboards import my_list_kb, owner_kb, top_kb
+from bot.services.alerts import notify_price_drop
 from bot.services.listings import publish_to_channel, update_channel_post
 from bot.services.render import fmt_price, render_listing, utcnow
+from bot.states import PriceEdit
 
 router = Router(name="my_listings")
 
@@ -62,12 +65,58 @@ async def sold_or_delete(call: CallbackQuery, callback_data: ItemCb, session: As
     if not listing:
         await call.answer(t(lang, "listing_not_found"), show_alert=True)
         return
+    await call.answer()
     listing.status = "sold" if callback_data.a == "sold" else "deleted"
     await session.commit()
-    await update_channel_post(bot, session, listing)
     await call.message.edit_reply_markup(reply_markup=None)
     await call.message.answer(t(lang, "marked_sold" if callback_data.a == "sold" else "deleted", id=listing.id))
+    await update_channel_post(bot, session, listing)
+    if listing.status == "sold":
+        # Bog'langan xaridorlardan sotuvchini baholashni so'raymiz
+        await ask_buyers_after_sale(bot, session, listing)
+
+
+# ---------- Narxni o'zgartirish (📉 narx tushsa — saralaganlar va obunachilarga xabar) ----------
+@router.callback_query(ItemCb.filter(F.a == "price"))
+async def price_start(call: CallbackQuery, callback_data: ItemCb, state: FSMContext, session: AsyncSession,
+                      user: User, lang: str) -> None:
+    listing = await _own(session, callback_data.id, user.id)
+    if not listing or listing.status != "active":
+        await call.answer(t(lang, "listing_not_found"), show_alert=True)
+        return
+    await state.set_state(PriceEdit.value)
+    await state.update_data(price_lid=listing.id)
+    await call.message.answer(t(lang, "ask_new_price", id=listing.id, price=fmt_price(listing.price)))
     await call.answer()
+
+
+@router.message(PriceEdit.value, F.text, ~F.text.in_(MENU_TEXTS), ~F.text.startswith("/"))
+async def price_save(message: Message, state: FSMContext, session: AsyncSession, bot: Bot, user: User,
+                     lang: str) -> None:
+    digits = "".join(ch for ch in message.text if ch.isdigit())
+    if not digits or not (1_000 <= int(digits) <= 1_000_000_000):
+        await message.answer(t(lang, "bad_price"))
+        return
+    lid = (await state.get_data()).get("price_lid")
+    await state.set_state(None)
+    listing = await _own(session, int(lid or 0), user.id)
+    if not listing or listing.status != "active":
+        await message.answer(t(lang, "listing_not_found"))
+        return
+    new, prev = int(digits), listing.price
+    if new == prev:
+        await message.answer(t(lang, "price_same"))
+        return
+    if new < prev:
+        listing.old_price = max(listing.old_price or 0, prev)  # eng yuqori eski narx chizilgan holda turadi
+    elif not listing.old_price or new >= listing.old_price:
+        listing.old_price = None
+    listing.price = new
+    await session.commit()
+    await message.answer(t(lang, "price_updated", id=listing.id, old=fmt_price(prev), new=fmt_price(new)))
+    await update_channel_post(bot, session, listing)
+    if new < prev:
+        await notify_price_drop(bot, session, listing, prev)
 
 
 # ---------- TOP: Telegram Stars ----------

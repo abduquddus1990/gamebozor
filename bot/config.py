@@ -34,6 +34,9 @@ class Config:
     web_host: str = os.getenv("WEB_HOST", "0.0.0.0")
     web_port: int = int(os.getenv("WEB_PORT", "8080"))
 
+    # Kanal posti uchun avtomatik rasmli banner (Pillow). 0 — o'chirish (birinchi skrinshot chiqadi)
+    channel_banner: bool = os.getenv("CHANNEL_BANNER", "1") == "1"
+
     # Saqlangan qidiruvlar (bildirishnoma) — bitta foydalanuvchiga nechta
     max_alerts: int = int(os.getenv("MAX_ALERTS", "5"))
 

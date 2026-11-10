@@ -85,25 +85,30 @@ EFOOTBALL = Game(
     ),
 )
 
-# Keyingi bosqich o'yinlari (enabled=False — menyuda ko'rinmaydi, admin yoqadi)
+PUBG_RANKS = ("Bronze", "Silver", "Gold", "Platinum", "Diamond", "Crown", "Ace", "Ace Master",
+              "Ace Dominator", "Conqueror")
+
 PUBGM = Game(
     code="pubgm",
     name="PUBG Mobile",
     emoji="🔫",
-    enabled=False,
     fields=(
-        Field("binding", "Bog'langan", "Привязка", "choice", ("Facebook", "Google", "X (Twitter)", "Apple ID"),
-              icon="🔗", filter="choice"),
-        Field("level", "Akkaunt darajasi", "Уровень", "int", icon="📈", filter="min", presets=(30, 50, 70, 80)),
-        Field("rank", "Eng yuqori rank", "Высший ранг", "text", icon="🏆", filter="text"),
+        Field("binding", "Akkaunt nimaga bog'langan", "Привязка аккаунта", "choice",
+              ("Facebook", "Google", "X (Twitter)", "Apple ID", "Game Center", "VK"), icon="🔗", filter="choice"),
+        Field("level", "Akkaunt darajasi (Level)", "Уровень аккаунта (Level)", "int", icon="📈",
+              filter="min", presets=(30, 50, 60, 70, 80, 90)),
+        Field("rank", "Eng yuqori rank", "Высший ранг", "choice", PUBG_RANKS, icon="🏆", filter="choice"),
+        Field("xsuits", "X-Suit soni", "Кол-во X-Suit", "int", icon="🥷", filter="min", presets=(1, 2, 3, 5)),
         Field("mythics", "Mifik skinlar soni", "Кол-во мификов", "int", icon="💎", filter="min",
-              presets=(1, 5, 10, 30)),
-        Field("upgr_guns", "Yaxshilangan qurollar (X-Suit va h.k.)", "Улучш. оружие / X-Suit", "text", icon="🔫",
-              filter="text"),
-        Field("uc", "UC qoldig'i", "Остаток UC", "int", required=False, icon="🪙"),
+              presets=(1, 5, 10, 30, 50)),
+        Field("upgr_guns", "Yaxshilangan qurollar (masalan: M416 Glacier, AKM Glacier)",
+              "Улучшаемое оружие (например: M416 Glacier, AKM Glacier)", "text", icon="🔫", filter="text"),
+        Field("uc", "UC qoldig'i", "Остаток UC", "int", required=False, icon="🪙", filter="min",
+              presets=(60, 300, 600, 1500, 3000)),
     ),
 )
 
+# Keyingi bosqich o'yini (enabled=False — Dashboard'da «🔜 tez kunda», admin yoqadi)
 STANDOFF2 = Game(
     code="so2",
     name="Standoff 2",
@@ -162,12 +167,12 @@ SHORT_LABELS: dict[str, tuple[str, str]] = {
     "packs": ("Pack", "Пак"), "coins": ("Coin", "Coin"), "gp": ("GP", "GP"),
     "division": ("Division", "Дивизион"), "donated": ("Donat", "Донат"),
     "level": ("Daraja", "Уровень"), "rank": ("Rank", "Ранг"), "mythics": ("Mifik", "Мифики"),
-    "upgr_guns": ("Qurollar", "Оружие"), "uc": ("UC", "UC"), "inventory": ("Inventar", "Инвентарь"),
+    "upgr_guns": ("Qurollar", "Оружие"), "xsuits": ("X-Suit", "X-Suit"), "uc": ("UC", "UC"), "inventory": ("Inventar", "Инвентарь"),
     "knives": ("Pichoq/skin", "Ножи/скины"), "method": ("Usul", "Способ"), "speed": ("Muddat", "Срок"),
 }
 
 TEXT_EXAMPLES: dict[str, str] = {
-    "top_players": "Messi", "packs": "POTW", "rank": "Conqueror", "upgr_guns": "M416", "knives": "Karambit",
+    "top_players": "Messi", "packs": "POTW", "rank": "Conqueror", "upgr_guns": "M416 Glacier", "knives": "Karambit",
 }
 
 

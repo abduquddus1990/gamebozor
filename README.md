@@ -3,7 +3,7 @@
 Bot: [@akkbozorbot](https://t.me/akkbozorbot) · Kanal: [@eakkbozor](https://t.me/eakkbozor)
 Stack: **Python 3.11+ · aiogram 3 · SQLAlchemy 2 (async) · SQLite → PostgreSQL**
 
-## Imkoniyatlar (v0.3)
+## Imkoniyatlar (v0.4)
 
 | Foydalanuvchi | Admin |
 |---|---|
@@ -17,7 +17,36 @@ Stack: **Python 3.11+ · aiogram 3 · SQLAlchemy 2 (async) · SQLite → Postgre
 | 👋 Onboarding: START tugmasi → til → bot haqida → 📖 5 sahifali qo'llanma → 📜 qoidalar → ✅ rozilik | Sotildi → kanal posti avtomatik «SOTILDI» |
 | 📜 Qoidalar (garant emasmiz, to'lovlar uchun javobgar emasmiz) — /start da, Dashboard'da, /rules | |
 | ⌨️ `/` menyusida 17 ta buyruq (uz/ru) | |
+| 🎮 eFootball + **PUBG Mobile** (rank, X-Suit, mifiklar, Glacier qurollar, UC) | `/delreview ID` — soxta sharhni o'chirish |
+| 📉 **Narx tushishi**: sotuvchi narxni o'zgartiradi → saralaganlar va mos obunachilarga xabar, eski narx chizilgan | ⚠️ 1–2⭐️ baholar adminlarga keladi |
+| ⭐️ **Reyting va sharhlar**: faqat «Bog'lanish» bosgan xaridor baholaydi; sotildi → baho so'raladi | |
+| 🖼 **Kanal uchun avtomatik banner**: ko'rsatkichlar, narx, skrinshot, TOP/✅/⭐️, «SOTILDI» muhri | |
 | ➕ E'lon berish, 📂 Mening e'lonlarim, 🚀 TOP (Stars), ❤️, 🛡 sotuvchini tekshirish, 🇺🇿/🇷🇺 | |
+
+## 0. Yangilanishni olish (`git pull`)
+
+Kod GitHub'da yangilanganda, bot ishlayotgan joyda eng so'nggi versiyani tortib olish:
+
+**Kompyuterda (Windows, VS Code terminali):**
+```powershell
+cd C:\Users\Surface\gamebozor
+git pull
+pip install -r requirements.txt      # yangi kutubxona qo'shilgan bo'lsa
+# botni to'xtating (Ctrl+C) va qayta ishga tushiring:
+python -m bot
+```
+
+**Serverda (Oracle / VPS):**
+```bash
+cd ~/gamebozor
+git pull
+.venv/bin/pip install -r requirements.txt
+sudo systemctl restart gamebozor
+journalctl -u gamebozor -f            # loglarni ko'rish (chiqish: Ctrl+C)
+```
+
+`.env` va `gamebozor.db` `git pull` dan ta'sirlanmaydi — sozlamalar va e'lonlar saqlanib qoladi.
+Bazaga yangi ustun/jadval kerak bo'lsa, bot ishga tushganda o'zi qo'shadi.
 
 ## 1. Kompyuterda ishga tushirish (VS Code, tekin)
 
@@ -44,7 +73,7 @@ python -m tests.test_flow
 2. Compute → Create instance → Ubuntu 22.04/24.04, shape **VM.Standard.E2.1.Micro** (Always Free).
 3. SSH bilan kirib:
 ```bash
-sudo apt update && sudo apt install -y python3-venv git
+sudo apt update && sudo apt install -y python3-venv git fonts-dejavu-core
 git clone <repo> ~/gamebozor && cd ~/gamebozor
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 cp .env.example .env && nano .env
@@ -87,16 +116,24 @@ Coin/UC xizmati turini qo'shish: `kind="topup"` bilan yangi `Game` yozing (masal
 
 Vitrina bot bilan bitta jarayonda ishlaydi (aiohttp, port `WEB_PORT`). Telegram faqat **HTTPS** manzilni ochadi.
 
-Eng oson tekin yo'l — **Cloudflare Tunnel**:
-```bash
-# serverda (Ubuntu): cloudflared o'rnatish
-curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
-chmod +x cloudflared
-./cloudflared tunnel --url http://localhost:8080      # → https://xxxx.trycloudflare.com
-```
-`.env` da `WEBAPP_URL=https://xxxx.trycloudflare.com` yozing va botni qayta ishga tushiring — pastki menyuda
-«📱 Vitrina» va Dashboard'da «📱 Vitrina (Mini App)» tugmalari paydo bo'ladi.
-Doimiy manzil uchun: Cloudflare'da bepul akkaunt + o'z domeningiz (named tunnel) yoki VPS'da nginx + Let's Encrypt.
+### Eng oson tekin yo'l — `WEBAPP_URL=auto` (Cloudflare Quick Tunnel)
+
+Akkaunt ham, domen ham kerak emas. Bot ishga tushganda tunnelni **o'zi** ochadi va adminlarga manzilni yuboradi.
+
+1. `cloudflared` ni o'rnating (bir marta):
+   - **Windows:** `winget install --id Cloudflare.cloudflared` (sizning kompyuteringizda allaqachon bor)
+   - **Ubuntu (server):**
+     ```bash
+     curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cf.deb
+     sudo dpkg -i cf.deb
+     ```
+2. `.env` da: `WEBAPP_URL=auto`
+3. Botni qayta ishga tushiring → adminga «📱 Vitrina ishga tushdi: https://….trycloudflare.com» xabari keladi.
+   Telegram'da /start bosing — pastki menyuda «📱 Vitrina» tugmasi paydo bo'ladi.
+
+⚠️ Cheklov: tekin manzil har safar bot qayta ishga tushganda **o'zgaradi**. Dashboard'dagi tugma doim yangi manzilni oladi;
+foydalanuvchilarning pastki menyusidagi tugma ular /start bosganda yangilanadi. Doimiy manzil kerak bo'lsa —
+o'z domeningiz (~$10/yil) + Cloudflare named tunnel, keyin `WEBAPP_URL=https://shop.domeningiz.uz`.
 
 Xavfsizlik: har bir API so'rovda Telegram `initData` imzosi tekshiriladi; rasmlar faqat faol e'lonlar uchun beriladi.
 
@@ -118,15 +155,18 @@ bot/
   callbacks.py         callback_data turlari
   states.py            FSM holatlari
   middlewares.py       DB sessiya, foydalanuvchi, til, ban, antiflood
-  db/models.py         User, Listing, Favorite, Report, Blacklist, Payment, SavedSearch
+  db/models.py         User, Listing, Favorite, Report, Blacklist, Payment, SavedSearch, ContactLog, Review
   db/base.py           jadvallar + yengil migratsiya (yangi ustunlar avtomatik qo'shiladi)
   services/games.py    o'yin shablonlari (forma + qidiruv filtrlari)
   services/search.py   qidiruv dvigateli, narx oralig'ini o'qish, bozor ko'rsatkichlari
   services/alerts.py   🔔 obunalar bildirishnomasi
   services/render.py   e'lon kartochkasi matni
+  services/banner.py   kanal uchun rasmli banner (Pillow)
+  services/reputation.py sotuvchi reytingi
   services/listings.py moderatsiya, kanal
-  handlers/            start (onboarding), dashboard, search, sell, my_listings, catalog, inline, admin
+  handlers/            start (onboarding), dashboard, search, sell, my_listings, reviews, catalog, inline, admin
   web/server.py        Mini App API (initData tekshiruvi)
+  web/tunnel.py        WEBAPP_URL=auto — tekin Cloudflare tunnel
   web/static/index.html Mini App interfeysi
 docs/                  suhbatlar jurnali (qarorlar tarixi)
 tests/test_flow.py     oflayn end-to-end test (bot + Mini App API)

@@ -12,13 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.callbacks import AlertCb, SrchCb
 from bot.config import config
 from bot.db.models import SavedSearch, User
-from bot.handlers.common import is_fav, seller_verified, show_screen
+from bot.handlers.common import is_fav, listing_caption, show_screen
 from bot.i18n import MENU_TEXTS, PRICE_RANGES, all_variants, t
 from bot.keyboards import (alerts_kb, result_kb, search_field_kb, search_game_kb, search_kb, search_price_kb,
                            search_sort_kb, search_text_kb)
 from bot.services.alerts import describe
 from bot.services.games import GAMES, TEXT_EXAMPLES, short_label
-from bot.services.render import render_listing
 from bot.services.search import SORTS, active_count, clean, empty_filters, parse_price_range, search
 from bot.states import SearchInput
 
@@ -69,7 +68,7 @@ async def show_results(event: Message | CallbackQuery, session: AsyncSession, us
     listing.views += 1
     await session.commit()
 
-    caption = render_listing(listing, lang, verified=await seller_verified(session, listing))
+    caption = await listing_caption(session, listing, lang)
     if len(listing.photos) > 1:
         extra = "\n\n" + t(lang, "more_photos", n=len(listing.photos) - 1, id=listing.id)
         caption = (caption[:1024 - len(extra)] + extra) if len(caption) + len(extra) > 1024 else caption + extra

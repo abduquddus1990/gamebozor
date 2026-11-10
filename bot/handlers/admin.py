@@ -248,3 +248,18 @@ async def refund(message: Message, command: CommandObject, session: AsyncSession
         listing.top_until = None
     await session.commit()
     await message.answer(f"↩️ {p.amount} ⭐️ qaytarildi.")
+
+
+@router.message(Command("delreview"))
+async def delreview(message: Message, command: CommandObject, session: AsyncSession) -> None:
+    """Noto'g'ri/soxta sharhni o'chirish: /delreview ID"""
+    from bot.db.models import Review
+
+    arg = (command.args or "").strip()
+    review = await session.get(Review, int(arg)) if arg.isdigit() else None
+    if not review:
+        await message.answer("Sharh topilmadi. Format: /delreview ID")
+        return
+    await session.delete(review)
+    await session.commit()
+    await message.answer(f"🗑 Sharh #{arg} o'chirildi ({review.rating}⭐️, sotuvchi {review.seller_id}).")

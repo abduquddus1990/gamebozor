@@ -26,6 +26,7 @@ from bot.handlers.common import show_single
 from bot.i18n import PRICE_LABELS, PRICE_RANGES, t
 from bot.services.games import GAMES, active_games, short_label
 from bot.services.render import fmt_price, is_top
+from bot.services.reputation import SellerInfo, seller_info
 from bot.services.search import SORTS, clean, search
 
 log = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ async def meta(request: web.Request) -> web.Response:
     })
 
 
-def _card(l: Listing, verified: bool, lang: str) -> dict:
+def _card(l: Listing, info: SellerInfo, lang: str) -> dict:
     game = GAMES.get(l.game)
     fields = []
     if game:
@@ -92,7 +93,9 @@ def _card(l: Listing, verified: bool, lang: str) -> dict:
     return {
         "id": l.id, "game": l.game, "emoji": game.emoji if game else "", "gameName": game.name if game else l.game,
         "kind": game.kind if game else "account", "title": l.title, "price": l.price, "priceText": fmt_price(l.price),
-        "negotiable": l.negotiable, "top": is_top(l), "verified": verified, "views": l.views,
+        "negotiable": l.negotiable, "top": is_top(l), "verified": info.verified, "views": l.views,
+        "rating": info.avg if info.count else None, "reviews": info.count,
+        "oldPrice": l.old_price if l.old_price and l.old_price > l.price else None,
         "photos": len(l.photos), "fields": fields, "description": l.description[:300],
     }
 
@@ -107,8 +110,8 @@ async def api_search(request: web.Request) -> web.Response:
         lang = (user.lang if user and user.lang else body.get("lang")) or "uz"
         items = await search(session, f)
         page = items[offset:offset + PAGE]
-        sellers = {u.id: u.is_verified for u in [await session.get(User, l.seller_id) for l in page] if u}
-        cards = [_card(l, sellers.get(l.seller_id, False), lang) for l in page]
+        infos = {sid: await seller_info(session, sid) for sid in {l.seller_id for l in page}}
+        cards = [_card(l, infos[l.seller_id], lang) for l in page]
     return web.json_response({"total": len(items), "offset": offset, "items": cards,
                               "next": offset + PAGE if len(items) > offset + PAGE else None})
 

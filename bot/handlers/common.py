@@ -49,16 +49,18 @@ async def is_fav(session: AsyncSession, user_id: int, listing_id: int) -> bool:
         select(Favorite.id).where(Favorite.user_id == user_id, Favorite.listing_id == listing_id)))
 
 
-async def seller_verified(session: AsyncSession, listing: Listing) -> bool:
-    seller = await session.get(User, listing.seller_id)
-    return bool(seller and seller.is_verified)
+async def listing_caption(session: AsyncSession, listing: Listing, lang: str) -> str:
+    """E'lon matni + sotuvchi belgilari (✅ tasdiq, ⭐️ reyting)."""
+    from bot.services.render import render_listing
+    from bot.services.reputation import seller_info
+
+    info = await seller_info(session, listing.seller_id)
+    return render_listing(listing, lang, verified=info.verified, rating=info.rating)
 
 
 async def show_single(bot: Bot, chat_id: int, session: AsyncSession, listing_id: int, lang: str,
                       user_id: int) -> bool:
     """Bitta e'lonni albom + kartochka bilan ko'rsatish (deep-link, saralangan, obuna, Mini App)."""
-    from bot.services.render import render_listing
-
     listing = await session.get(Listing, listing_id)
     if not listing or listing.status not in ("active", "sold"):
         await bot.send_message(chat_id, t(lang, "listing_not_found"))
@@ -69,7 +71,7 @@ async def show_single(bot: Bot, chat_id: int, session: AsyncSession, listing_id:
         await bot.send_media_group(chat_id, [InputMediaPhoto(media=p) for p in listing.photos[1:]])
     await bot.send_photo(
         chat_id, listing.photos[0],
-        caption=render_listing(listing, lang, verified=await seller_verified(session, listing)),
+        caption=await listing_caption(session, listing, lang),
         reply_markup=card_kb(lang, listing.id, is_fav=await is_fav(session, user_id, listing.id))
         if listing.status == "active" else None,
     )

@@ -147,6 +147,9 @@ async def main():
     # 2) E'lon berish
     await feed(m(U_SELLER, "➕ E'lon berish"))
     await feed(cb(U_SELLER, "sell:type:account"))
+    kb = str(last("SendMessage")["reply_markup"])
+    assert "PUBG Mobile" in kb and "eFootball" in kb  # PUBG bo'limi ochiq
+    await feed(cb(U_SELLER, "sell:game:efootball"))
     await feed(m(U_SELLER, "TS 3250, 18 Epic, Messi"))
     await feed(cb(U_SELLER, "sell:opt:0"))        # platform Android
     await feed(cb(U_SELLER, "sell:opt:0"))        # binding KONAMI ID
@@ -177,7 +180,9 @@ async def main():
     await feed(cb(U_BUYER, "d:accept:"))
     await feed(m(U_BUYER, "🔎 Поиск"))
     menu = last("SendMessage")["text"]
-    assert "Поиск" in menu and "eFootball" in menu, menu
+    assert "Поиск" in menu and "все игры" in menu, menu
+    await feed(cb(U_BUYER, "s:sg:efootball::0"))
+    assert "eFootball" in last("EditMessageText")["text"]
     await feed(cb(U_BUYER, "s:f:team_strength::0"))
     assert "не меньше" in last("EditMessageText")["text"]
     await feed(cb(U_BUYER, "s:set:team_strength:3200:0"))
@@ -303,9 +308,42 @@ async def main():
         telegram_payment_charge_id="ch_1", provider_payment_charge_id="")))
     assert "TOP" in last("SendMessage", 2)["text"]
 
-    # 11) Sotildi
+    # 10b) Narxni tushirish → saralagan xaridorga xabar, kanal posti yangilanadi
+    await feed(cb(U_SELLER, "it:price:1"))
+    assert "1 500 000" in last("SendMessage", 2)["text"]
+    await feed(m(U_SELLER, "1 200 000"))
+    assert "1 200 000" in last("SendMessage", 2)["text"]
+    drop = last("SendMessage", 3)["text"]
+    assert "Цена снижена" in drop and "<s>1 500 000</s>" in drop, drop
+    assert "<s>1 500 000</s>" in last("EditMessageMedia")["media"]["caption"]
+    print("---- PRICE DROP ----\n" + drop)
+
+    # 11) Sotildi → banner «SOTILDI», bog'langan xaridordan baho so'raladi
     await feed(cb(U_SELLER, "it:sold:1"))
-    assert "SOTILDI" in last("EditMessageCaption")["caption"]
+    assert "SOTILDI" in last("EditMessageMedia")["media"]["caption"]
+    ask = last("SendMessage", 3)
+    assert "продано" in ask["text"] and "rv:r:1:5" in str(ask["reply_markup"]), ask["text"]
+
+    # 11b) Reyting va sharh
+    await feed(cb(U_SELLER, "rv:ask:1:0"))
+    assert "самого себя" in last("AnswerCallbackQuery")["text"] or "o'zingizga" in last("AnswerCallbackQuery")["text"].lower()
+    await feed(cb(U_BUYER, "rv:r:1:5"))
+    assert "Оценка принята" in last("SendMessage", 3)["text"]
+    assert "★★★★★" in last("SendMessage", 2)["text"]  # sotuvchiga xabar
+    await feed(m(U_BUYER, "Hammasi halol, tez topshirdi"))
+    assert "Спасибо" in last("SendMessage", 3)["text"]
+    await feed(cb(U_BUYER, "rv:r:1:4"))
+    assert "уже оценили" in last("AnswerCallbackQuery")["text"]
+    await feed(m(U_BUYER, "/check @ali_seller"))
+    chk = last("SendMessage")["text"]
+    assert "5.0" in chk and "halol" in chk, chk
+    print("---- CHECK + REVIEWS ----\n" + chk)
+    await feed(m(U_BUYER, "/l1"))
+    assert "⭐️ 5.0 (1" in last("SendPhoto", 3)["caption"]
+
+    # Kanal posti haqiqatan banner rasm bilan chiqqanmi
+    ch_photo = [c for c in calls if c[0] == "SendPhoto" and c[1]["chat_id"] == "@eakkbozor"][0][1]["photo"]
+    assert not isinstance(ch_photo, str), "banner o'rniga skrinshot chiqdi"
 
     # 12) Admin statistika
     await feed(cb(U_ADMIN, "adm:stats"))

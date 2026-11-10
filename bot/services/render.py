@@ -32,7 +32,8 @@ def is_top(listing: Listing) -> bool:
     return bool(listing.top_until and listing.top_until > utcnow())
 
 
-def render_listing(listing: Listing, lang: str = "uz", for_channel: bool = False, verified: bool = False) -> str:
+def render_listing(listing: Listing, lang: str = "uz", for_channel: bool = False, verified: bool = False,
+                   rating: tuple[float, int] | None = None) -> str:
     game = GAMES.get(listing.game)
     ru = lang == "ru"
     lines: list[str] = []
@@ -64,13 +65,22 @@ def render_listing(listing: Listing, lang: str = "uz", for_channel: bool = False
         if "Login" in str((listing.data or {}).get("method", "")):
             lines.append(t(lang, "login_warn"))
     else:
-        lines.append(f"\n💵 <b>{price} {som}</b>" + (" 🤝" if listing.negotiable else ""))
+        old = ""
+        if listing.old_price and listing.old_price > listing.price and listing.status == "active":
+            old = f"  <s>{fmt_price(listing.old_price)}</s> 📉"
+        lines.append(f"\n💵 <b>{price} {som}</b>" + (" 🤝" if listing.negotiable else "") + old)
 
     if listing.description:
         lines.append(f"\n📝 {escape(listing.description, quote=False)}")
 
+    seller_bits = []
     if verified:
-        lines.append("\n✅ " + ("Проверенный продавец" if ru else "Tasdiqlangan sotuvchi"))
+        seller_bits.append("✅ " + ("Проверенный продавец" if ru else "Tasdiqlangan sotuvchi"))
+    if rating:
+        avg, cnt = rating
+        seller_bits.append(f"⭐️ {avg:.1f} ({cnt} " + ("отз." if ru else "sharh") + ")")
+    if seller_bits:
+        lines.append("\n" + " · ".join(seller_bits))
 
     if for_channel:
         lines.append("\n👇 Batafsil va sotuvchi bilan aloqa — botda / Подробнее — в боте")

@@ -11,7 +11,7 @@ from aiogram.types import BotCommand, BotCommandScopeChat, BotCommandScopeDefaul
 
 from bot.config import config
 from bot.db.base import init_db
-from bot.handlers import admin, catalog, dashboard, inline, my_listings, search, sell, start
+from bot.handlers import admin, catalog, dashboard, inline, my_listings, reviews, search, sell, start
 from bot.middlewares import DbMiddleware, ThrottleMiddleware
 
 log = logging.getLogger(__name__)
@@ -41,6 +41,7 @@ ADMIN_COMMANDS = [
     ("admin", "🛠 Admin panel"), ("ban", "ID — bloklash"), ("unban", "ID — blokdan chiqarish"),
     ("verify", "ID — ✅ tasdiqlangan sotuvchi"), ("blacklist", "@user izoh — qora ro'yxat"),
     ("unblacklist", "@user — qora ro'yxatdan olish"), ("refund", "CHARGE_ID — Stars qaytarish"),
+    ("delreview", "ID — soxta sharhni o'chirish"),
 ]
 
 # Bo'sh chatda ko'rinadigan matn («Bu bot nima qila oladi?») — shu bo'lsa Telegram
@@ -99,7 +100,7 @@ def build_dispatcher(throttle_rate: float = 0.3) -> Dispatcher:
 
     # Tartib muhim: admin birinchi (moderatsiya tugmalari), oxirida — erkin matnli qidiruv
     dp.include_routers(admin.router, start.router, dashboard.router, search.router, sell.router,
-                       my_listings.router, catalog.router, inline.router, search.fallback_router)
+                       my_listings.router, reviews.router, catalog.router, inline.router, search.fallback_router)
     return dp
 
 
@@ -113,16 +114,32 @@ async def main() -> None:
     dp = build_dispatcher()
     await setup_bot_profile(bot)
 
-    runner = None
+    runner, tunnel = None, None
     if config.webapp_url:
         from bot.web.server import start_web
         runner = await start_web(bot)
+        if config.webapp_url.lower() == "auto":
+            # Tekin Cloudflare Quick Tunnel: HTTPS manzilni bot o'zi oladi
+            from bot.web.tunnel import start_quick_tunnel
+            res = await start_quick_tunnel(config.web_port)
+            url = res[1] if res else ""
+            tunnel = res[0] if res else None
+            object.__setattr__(config, "webapp_url", url)  # tugmalar yangi manzilni oladi
+            if url:
+                for admin_id in config.admin_ids:
+                    try:
+                        await bot.send_message(admin_id, f"📱 Vitrina (Mini App) ishga tushdi:\n{url}\n\n"
+                                                         "Pastki menyuni yangilash uchun /start bosing.")
+                    except TelegramAPIError:
+                        pass
 
     await bot.delete_webhook(drop_pending_updates=True)
     logging.info("Gamebozor bot ishga tushdi")
     try:
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
+        if tunnel and tunnel.returncode is None:
+            tunnel.kill()
         if runner:
             await runner.cleanup()
 

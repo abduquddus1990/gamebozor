@@ -10,3 +10,4 @@ Nusxalari claude.ai dagi **Gamebozor** loyihasida ham bor (`claude/` papkasi).
 | suhbat-03-coin-xizmati-va-bozor.md | Coin/UC xizmati, komissiya hisobi, O'zbek eFootball kanallari |
 | suhbat-04-erkin-band-yatt-va-v0.2.md | Erkin band / YaTT, Uzum Visa 2% hisobi, TON, v0.2 (Coin/UC bo'limi) |
 | suhbat-05-dashboard-qidiruv-v0.3.md | Dashboard, kengaytirilgan qidiruv, onboarding va qoidalar, / buyruqlar, obunalar, inline, Mini App |
+| suhbat-06-pubg-narx-reyting-banner-v0.4.md | git pull, tekin Mini App tunneli, PUBG Mobile, narx tushishi, reyting/sharhlar, kanal banneri |

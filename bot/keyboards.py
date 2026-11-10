@@ -2,7 +2,7 @@ from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup, KeyboardB
                            SwitchInlineQueryChosenChat, WebAppInfo)
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from bot.callbacks import (AdminCb, AlertCb, DashCb, GuideCb, ItemCb, LangCb, ModCb, SellCb, SrchCb,
+from bot.callbacks import (AdminCb, AlertCb, DashCb, GuideCb, ItemCb, LangCb, ModCb, RevCb, SellCb, SrchCb,
                            TopCb)
 from bot.config import config
 from bot.i18n import PRICE_LABELS, REJECT_REASONS, t
@@ -424,6 +424,7 @@ def owner_kb(lang: str, listing_id: int, status: str) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     if status == "active":
         kb.button(text=t(lang, "btn_top"), callback_data=ItemCb(a="top", id=listing_id).pack())
+        kb.button(text=t(lang, "btn_price_edit"), callback_data=ItemCb(a="price", id=listing_id).pack())
         kb.button(text=t(lang, "btn_sold"), callback_data=ItemCb(a="sold", id=listing_id).pack())
     if status in ("active", "pending", "rejected"):
         kb.button(text=t(lang, "btn_delete"), callback_data=ItemCb(a="del", id=listing_id).pack())
@@ -465,3 +466,30 @@ def admin_kb() -> InlineKeyboardMarkup:
     kb.adjust(2)
     return kb.as_markup()
 
+
+
+# ---------- Reyting / sharhlar ----------
+def rate_button_kb(lang: str, listing_id: int) -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(lang, "btn_rate"), callback_data=RevCb(a="ask", id=listing_id).pack())
+    kb.button(text=t(lang, "d_safety"), callback_data=DashCb(a="safety").pack())
+    kb.adjust(2)
+    return kb.as_markup()
+
+
+def rate_kb(lang: str, listing_id: int, not_bought: bool = True) -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    for n in range(1, 6):
+        kb.button(text=f"{n}⭐️", callback_data=RevCb(a="r", id=listing_id, v=n).pack())
+    sizes = [5]
+    if not_bought:
+        kb.button(text=t(lang, "btn_not_bought"), callback_data=RevCb(a="no", id=listing_id).pack())
+        sizes.append(1)
+    kb.adjust(*sizes)
+    return kb.as_markup()
+
+
+def review_skip_kb(lang: str, listing_id: int) -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(lang, "btn_skip"), callback_data=RevCb(a="skip", id=listing_id).pack())
+    return kb.as_markup()

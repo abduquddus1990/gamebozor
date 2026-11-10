@@ -14,10 +14,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.callbacks import ItemCb
 from bot.config import config
-from bot.db.models import Blacklist, Favorite, Listing, Report, User
+from bot.db.models import Blacklist, ContactLog, Favorite, Listing, Report, User
 from bot.handlers.common import is_fav, require_rules, show_single
 from bot.i18n import MENU_TEXTS, all_variants, t
-from bot.keyboards import my_list_kb
+from bot.keyboards import my_list_kb, rate_button_kb
 from bot.services.render import fmt_price
 from bot.states import CheckForm, ReportForm
 
@@ -66,7 +66,12 @@ async def contact(call: CallbackQuery, callback_data: ItemCb, session: AsyncSess
         return
     if not await require_rules(call, user, lang):
         return
-    await call.message.answer(t(lang, "contact_info", contact=escape(listing.contact)))
+    if user.id != listing.seller_id and not await session.scalar(select(ContactLog.id).where(
+            ContactLog.user_id == user.id, ContactLog.listing_id == listing.id)):
+        session.add(ContactLog(user_id=user.id, listing_id=listing.id))  # sharh qoldirish huquqi
+        await session.commit()
+    await call.message.answer(t(lang, "contact_info", contact=escape(listing.contact)),
+                              reply_markup=rate_button_kb(lang, listing.id))
     await call.answer()
     if user.id != listing.seller_id:
         seller = await session.get(User, listing.seller_id)
@@ -174,4 +179,6 @@ async def _check(message: Message, session: AsyncSession, lang: str, raw: str) -
             Listing.seller_id == member.id, Listing.status == "sold")) or 0
         extra = t(lang, "check_member", listings=total, sold=sold,
                   verified=t(lang, "verified") if member.is_verified else "")
+        from bot.handlers.reviews import reviews_block
+        extra += await reviews_block(session, member.id, lang)
     await message.answer(t(lang, "check_ok", t=shown, reports=reports, extra=extra))

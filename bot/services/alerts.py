@@ -69,3 +69,50 @@ async def notify_saved_searches(bot: Bot, session: AsyncSession, listing: Listin
             log.info("Obuna xabari yuborilmadi %s: %s", ss.user_id, e)
         await asyncio.sleep(0.05)
     return len(notified)
+
+
+async def notify_price_drop(bot: Bot, session: AsyncSession, listing: Listing, old_price: int) -> int:
+    """📉 Narx tushdi: (1) e'lonni saralaganlarga, (2) eski narxda mos kelmagan, endi mos kelgan obunalarga."""
+    from bot.db.models import Favorite
+
+    sent: set[int] = {listing.seller_id}
+    fav_rows = (await session.execute(
+        select(Favorite.user_id, User.lang).join(User, User.id == Favorite.user_id)
+        .where(Favorite.listing_id == listing.id, User.is_banned == False))).all()  # noqa: E712
+    for uid, lang in fav_rows:
+        if uid in sent:
+            continue
+        sent.add(uid)
+        lang = lang or "uz"
+        text = t(lang, "price_drop_hit", summary=listing_line(listing, lang),
+                 old=fmt_price(old_price), new=fmt_price(listing.price))
+        try:
+            await bot.send_message(uid, text, reply_markup=open_listing_kb(lang, listing.id))
+        except TelegramAPIError:
+            pass
+        await asyncio.sleep(0.05)
+
+    # Obunalar: faqat yangi narx tufayli mos kelib qolganlar (avval xabar olmaganlar)
+    seller = await session.get(User, listing.seller_id)
+    verified = bool(seller and seller.is_verified)
+    current = listing.price
+    rows = (await session.execute(select(SavedSearch, User.lang).join(User, User.id == SavedSearch.user_id)
+                                  .where(User.is_banned == False))).all()  # noqa: E712
+    for ss, lang in rows:
+        if ss.user_id in sent:
+            continue
+        f = clean(ss.filters)
+        listing.price = old_price
+        matched_before = matches(listing, f, verified)
+        listing.price = current
+        if matched_before or not matches(listing, f, verified):
+            continue
+        sent.add(ss.user_id)
+        lang = lang or "uz"
+        text = t(lang, "alert_hit", summary=listing_line(listing, lang)) + f"\n📉 <s>{fmt_price(old_price)}</s>\n\n🔔 {describe(ss.filters, lang)}"
+        try:
+            await bot.send_message(ss.user_id, text, reply_markup=open_listing_kb(lang, listing.id))
+        except TelegramAPIError:
+            pass
+        await asyncio.sleep(0.05)
+    return len(sent) - 1

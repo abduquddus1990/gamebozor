@@ -171,7 +171,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "soon": "🔜 {name} — tez kunda! Shablon tayyor, bo'lim yaqinda ochiladi.",
         "dash_profile": (
             "👤 <b>Profil</b>\n━━━━━━━━━━━━━━━━━━━━\n"
-            "🆔 <code>{id}</code>  {username}\n{badge}\n"
+            "🆔 <code>{id}</code>  {username}\n{badge}{rating}\n"
             "📂 E'lonlar: 🟢 {active} · ⏳ {pending} · ✅ {sold}\n"
             "👁 Jami ko'rishlar: <b>{views}</b>\n❤️ Saralangan: {favs}   🔔 Obunalar: {alerts}\n"
             "📅 Botda: {since} dan\n━━━━━━━━━━━━━━━━━━━━\n"
@@ -308,6 +308,28 @@ TEXTS: dict[str, dict[str, str]] = {
         "check_member": "Botda: {listings} ta e'lon, {sold} ta sotilgan{verified}",
         "verified": ", ✅ tasdiqlangan sotuvchi",
         "banned": "⛔️ Siz bloklangansiz.",
+        # narx o'zgartirish / narx tushishi
+        "btn_price_edit": "✏️ Narxni o'zgartirish",
+        "ask_new_price": "💵 #{id} uchun yangi narxni yozing (hozirgi: {price} so'm):",
+        "price_updated": "✅ #{id} narxi yangilandi: {old} → <b>{new}</b> so'm",
+        "price_same": "Narx o'zgarmadi.",
+        "price_drop_hit": "📉 <b>Narx tushdi!</b> Saralangan e'loningiz:\n{summary}\n<s>{old}</s> → <b>{new}</b> so'm",
+        # reyting / sharhlar
+        "btn_rate": "⭐️ Sotuvchini baholash",
+        "rate_ask": "⭐️ <b>#{id}</b> e'loni bo'yicha sotuvchini ({seller}) baholang.\nSavdo qanday o'tdi?",
+        "rate_ask_sold": "🤝 Siz qiziqqan <b>#{id}</b> e'lon sotildi.\nShu sotuvchidan ({seller}) xarid qildingizmi? "
+                         "Baholang — bu boshqa xaridorlarni firibgarlardan himoya qiladi:",
+        "btn_not_bought": "🙅 Men sotib olmadim",
+        "rate_saved": "✅ Bahoyingiz qabul qilindi: {stars}\n📝 Qisqa izoh yozing (300 belgigacha) yoki o'tkazib yuboring:",
+        "rate_thanks": "🙏 Rahmat! Sharhingiz sotuvchi profiliga qo'shildi.",
+        "rate_denied": "Baho faqat shu e'lon bo'yicha «📞 Bog'lanish» ni bosgan xaridorlar uchun.",
+        "rate_dup": "Bu e'lon bo'yicha allaqachon baho bergansiz.",
+        "rate_self": "O'zingizga baho bera olmaysiz 🙂",
+        "new_review": "⭐️ Sizga yangi baho: {stars} — e'lon #{id}\n{text}",
+        "rating_line": "\n⭐️ Reyting: <b>{avg}</b> / 5 ({n} ta sharh)",
+        "reviews_title": "\n\n💬 So'nggi sharhlar:",
+        "no_reviews": "\n⭐️ Hali sharh yo'q",
+        "dismissed": "👌 Tushunarli.",
         "unknown": "🤔 Tushunmadim. 🏠 /menu — Dashboard, 🔎 /search — qidiruv, ⌨️ /commands — buyruqlar.",
     },
     "ru": {
@@ -474,7 +496,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "soon": "🔜 {name} — скоро! Шаблон готов, раздел скоро откроется.",
         "dash_profile": (
             "👤 <b>Профиль</b>\n━━━━━━━━━━━━━━━━━━━━\n"
-            "🆔 <code>{id}</code>  {username}\n{badge}\n"
+            "🆔 <code>{id}</code>  {username}\n{badge}{rating}\n"
             "📂 Объявления: 🟢 {active} · ⏳ {pending} · ✅ {sold}\n"
             "👁 Всего просмотров: <b>{views}</b>\n❤️ Избранное: {favs}   🔔 Подписки: {alerts}\n"
             "📅 В боте с {since}\n━━━━━━━━━━━━━━━━━━━━\n"
@@ -604,6 +626,26 @@ TEXTS: dict[str, dict[str, str]] = {
         "check_member": "В боте: {listings} объявл., продано {sold}{verified}",
         "verified": ", ✅ проверенный продавец",
         "banned": "⛔️ Вы заблокированы.",
+        "btn_price_edit": "✏️ Изменить цену",
+        "ask_new_price": "💵 Новая цена для #{id} (сейчас: {price} сум):",
+        "price_updated": "✅ Цена #{id} обновлена: {old} → <b>{new}</b> сум",
+        "price_same": "Цена не изменилась.",
+        "price_drop_hit": "📉 <b>Цена снижена!</b> Объявление из избранного:\n{summary}\n<s>{old}</s> → <b>{new}</b> сум",
+        "btn_rate": "⭐️ Оценить продавца",
+        "rate_ask": "⭐️ Оцените продавца ({seller}) по объявлению <b>#{id}</b>.\nКак прошла сделка?",
+        "rate_ask_sold": "🤝 Объявление <b>#{id}</b>, которым вы интересовались, продано.\nВы купили у этого продавца ({seller})? "
+                         "Оцените — это защищает других покупателей от мошенников:",
+        "btn_not_bought": "🙅 Я не покупал(а)",
+        "rate_saved": "✅ Оценка принята: {stars}\n📝 Напишите короткий отзыв (до 300 символов) или пропустите:",
+        "rate_thanks": "🙏 Спасибо! Отзыв добавлен в профиль продавца.",
+        "rate_denied": "Оценивать могут только покупатели, нажавшие «📞 Связаться» в этом объявлении.",
+        "rate_dup": "Вы уже оценили это объявление.",
+        "rate_self": "Нельзя оценить самого себя 🙂",
+        "new_review": "⭐️ Новая оценка: {stars} — объявление #{id}\n{text}",
+        "rating_line": "\n⭐️ Рейтинг: <b>{avg}</b> / 5 ({n} отз.)",
+        "reviews_title": "\n\n💬 Последние отзывы:",
+        "no_reviews": "\n⭐️ Отзывов пока нет",
+        "dismissed": "👌 Понятно.",
         "unknown": "🤔 Не понял. 🏠 /menu — Dashboard, 🔎 /search — поиск, ⌨️ /commands — команды.",
     },
 }

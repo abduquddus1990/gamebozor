@@ -211,9 +211,11 @@ async def cb_profile(call: CallbackQuery, session: AsyncSession, user: User, lan
         Listing.seller_id == user.id)) or 0
     favs = await session.scalar(select(func.count(Favorite.id)).where(Favorite.user_id == user.id)) or 0
     alerts = await session.scalar(select(func.count(SavedSearch.id)).where(SavedSearch.user_id == user.id)) or 0
+    from bot.handlers.reviews import reviews_block
     ref = f"https://t.me/{config.bot_username}?start=r_{user.id}"
     text = t(lang, "dash_profile", id=user.id, username=f"@{escape(user.username)}" if user.username else "",
              badge=t(lang, "badge_verified" if user.is_verified else "badge_none"),
+             rating=await reviews_block(session, user.id, lang, limit=0),
              active=by_status.get("active", 0), pending=by_status.get("pending", 0), sold=by_status.get("sold", 0),
              views=views, favs=favs, alerts=alerts,
              since=(user.created_at or utcnow()).strftime("%d.%m.%Y"), ref=ref)
