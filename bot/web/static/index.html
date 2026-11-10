@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Gamebozor</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:var(--tg-theme-bg-color,#0f1115);--bg2:var(--tg-theme-secondary-bg-color,#171a21);
+  --text:var(--tg-theme-text-color,#f2f4f8);--hint:var(--tg-theme-hint-color,#8b93a7);
+  --link:var(--tg-theme-link-color,#5aa9ff);--btn:var(--tg-theme-button-color,#3b82f6);
+  --btnt:var(--tg-theme-button-text-color,#fff);--card:var(--tg-theme-section-bg-color,var(--bg2));
+  --accent:#7c5cff;--hot:#ff5a36;--ok:#22c55e;--r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.wrap{padding:12px 14px 90px;max-width:760px;margin:0 auto}
+.hero{position:relative;border-radius:22px;padding:18px 16px 14px;overflow:hidden;
+  background:radial-gradient(120% 140% at 0% 0%,#7c5cff 0%,transparent 55%),radial-gradient(120% 140% at 100% 0%,#ff5a36 0%,transparent 50%),var(--bg2)}
+.hero h1{margin:0;font-size:22px;letter-spacing:.2px;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+.hero p{margin:4px 0 12px;color:rgba(255,255,255,.85);font-size:13px}
+.search{display:flex;gap:8px}
+.search input{flex:1;min-width:0;border:0;outline:0;border-radius:14px;padding:12px 14px;font-size:15px;
+  background:rgba(255,255,255,.92);color:#111}
+.fbtn{position:relative;border-radius:14px;padding:0 14px;background:rgba(0,0,0,.35);color:#fff;font-weight:600}
+.badge{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:var(--hot);
+  color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 13px;border-radius:999px;background:var(--bg2);color:var(--text);font-size:14px;white-space:nowrap;
+  border:1px solid transparent;transition:.15s}
+.chip.on{background:var(--btn);color:var(--btnt)}
+.meta{display:flex;justify-content:space-between;align-items:center;color:var(--hint);font-size:13px;margin:10px 2px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.card{background:var(--card);border-radius:var(--r);overflow:hidden;text-align:left;display:flex;flex-direction:column;
+  animation:pop .25s ease both}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ph{position:relative;aspect-ratio:4/3;background:linear-gradient(135deg,#2a2f3a,#1b1f27);overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.tag{position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;color:#fff;
+  background:linear-gradient(90deg,var(--hot),#ff9f1a)}
+.cnt{position:absolute;bottom:8px;right:8px;padding:2px 7px;border-radius:8px;font-size:11px;color:#fff;background:rgba(0,0,0,.55)}
+.cb{padding:9px 10px 11px;display:flex;flex-direction:column;gap:5px}
+.price{font-weight:800;font-size:16px}
+.price small{font-weight:600;color:var(--hint);font-size:12px}
+.title{font-size:13px;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stats{display:flex;flex-wrap:wrap;gap:4px}
+.st{font-size:11px;padding:2px 6px;border-radius:7px;background:rgba(124,92,255,.15);color:var(--text)}
+.ver{color:var(--ok);font-size:12px;font-weight:600}
+.sk{border-radius:var(--r);aspect-ratio:3/4;background:linear-gradient(90deg,var(--bg2) 25%,rgba(127,127,127,.15) 50%,var(--bg2) 75%);
+  background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.empty{text-align:center;color:var(--hint);padding:40px 10px}
+.empty b{display:block;font-size:40px;margin-bottom:6px}
+.warn{margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(255,90,54,.12);font-size:13px;color:var(--text)}
+.warn a{color:var(--link)}
+/* sheet */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.2s;z-index:10}
+.ov.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;background:var(--bg);border-radius:22px 22px 0 0;
+  transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:11;padding:8px 16px 28px}
+.sheet.on{transform:none}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--hint);opacity:.4;margin:4px auto 12px}
+.sec{margin:14px 0}
+.sec h4{margin:0 0 8px;font-size:13px;color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.row{display:flex;gap:8px}
+.in{width:100%;border:1px solid rgba(127,127,127,.25);outline:0;border-radius:12px;padding:11px 12px;background:var(--bg2);color:var(--text);font-size:15px}
+.wrapc{display:flex;flex-wrap:wrap;gap:7px}
+.tog{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:12px;background:var(--bg2)}
+.sw{width:46px;height:28px;border-radius:14px;background:rgba(127,127,127,.35);position:relative;transition:.2s}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--ok)}.sw.on:after{left:21px}
+.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;border-radius:16px;scrollbar-width:none}
+.gal::-webkit-scrollbar{display:none}
+.gal img{flex:none;width:100%;scroll-snap-align:center;border-radius:16px;aspect-ratio:4/3;object-fit:cover;background:var(--bg2)}
+.dtitle{font-size:18px;font-weight:700;margin:12px 0 4px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.kv div{background:var(--bg2);border-radius:12px;padding:9px 10px;font-size:12px;color:var(--hint)}
+.kv b{display:block;color:var(--text);font-size:14px;margin-top:2px;word-break:break-word}
+.desc{margin-top:10px;background:var(--bg2);border-radius:12px;padding:10px 12px;font-size:14px;white-space:pre-wrap}
+.acts{display:flex;gap:8px;margin-top:14px}
+.b1{flex:1;padding:13px;border-radius:14px;background:var(--btn);color:var(--btnt);font-weight:700}
+.b2{padding:13px 16px;border-radius:14px;background:var(--bg2);font-weight:600}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;background:rgba(20,20,24,.92);color:#fff;
+  padding:10px 16px;border-radius:12px;font-size:14px;transition:.25s;z-index:20;max-width:90%;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.rules{white-space:pre-wrap;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>🎮 Gamebozor</h1>
+    <p id="sub"></p>
+    <div class="search">
+      <input id="q" type="search" enterkeyhint="search" autocomplete="off">
+      <button class="fbtn" id="fbtn">⚙️<span class="badge" id="badge" hidden></span></button>
+    </div>
+  </div>
+  <div class="chips" id="games"></div>
+  <div class="chips" id="quick"></div>
+  <div class="meta"><span id="count"></span><span id="sortLbl"></span></div>
+  <div class="grid" id="grid"></div>
+  <div id="more" style="height:1px"></div>
+  <div class="warn" id="warn"></div>
+</div>
+
+<div class="ov" id="ov"></div>
+<div class="sheet" id="fsheet"><div class="grab"></div><div id="fbody"></div></div>
+<div class="sheet" id="dsheet"><div class="grab"></div><div id="dbody"></div></div>
+<div class="sheet" id="rsheet"><div class="grab"></div><div class="rules" id="rbody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const tg = window.Telegram?.WebApp; tg?.ready(); tg?.expand();
+try { tg?.setHeaderColor?.("secondary_bg_color"); } catch(e) {}
+const initData = tg?.initData || "";
+const urlLang = new URLSearchParams(location.search).get("lang");
+let L = urlLang || ((tg?.initDataUnsafe?.user?.language_code || "").startsWith("ru") ? "ru" : "uz");
+
+const I18N = {
+  uz:{sub:"O'yin akkauntlari bozori — izlang, solishtiring, tanlang",ph:"O'yinchi, pack, TS… (messi 3200)",all:"Barchasi",
+      found:n=>`Topildi: ${n}`,filters:"Filtrlar",price:"Narx oralig'i (so'm)",from:"dan",to:"gacha",sort:"Saralash",
+      verified:"Faqat tasdiqlangan sotuvchilar",show:n=>`Ko'rsatish (${n})`,reset:"Tozalash",any:"Farqi yo'q",
+      min:"kamida",text:"so'z",empty:"Hech narsa topilmadi",emptyH:"Filtrlarni yumshatib ko'ring",
+      open:"📞 Chatda ochish va bog'lanish",share:"📤",sent:"✅ E'lon chatga yuborildi",neg:"kelishiladi",
+      warn:"⚠️ Gamebozor — faqat e'lonlar taxtasi. Biz garant emasmiz va to'lovlar uchun javobgar emasmiz. Oldindan to'liq pul o'tkazmang.",
+      rules:"Qoidalar",som:"so'm",views:"ko'rildi",err:"Xatolik. Qayta urinib ko'ring",onlyTg:"Vitrinani Telegram ichida oching"},
+  ru:{sub:"Рынок игровых аккаунтов — ищите, сравнивайте, выбирайте",ph:"Игрок, пак, TS… (messi 3200)",all:"Все",
+      found:n=>`Найдено: ${n}`,filters:"Фильтры",price:"Диапазон цен (сум)",from:"от",to:"до",sort:"Сортировка",
+      verified:"Только проверенные продавцы",show:n=>`Показать (${n})`,reset:"Сбросить",any:"Не важно",
+      min:"не меньше",text:"слово",empty:"Ничего не найдено",emptyH:"Попробуйте ослабить фильтры",
+      open:"📞 Открыть в чате и связаться",share:"📤",sent:"✅ Объявление отправлено в чат",neg:"торг",
+      warn:"⚠️ Gamebozor — только доска объявлений. Мы не гарант и не отвечаем за платежи. Не переводите всю сумму заранее.",
+      rules:"Правила",som:"сум",views:"просм.",err:"Ошибка. Попробуйте снова",onlyTg:"Откройте витрину внутри Telegram"},
+};
+const T = () => I18N[L] || I18N.uz;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const short = n => n >= 1e6 ? (n/1e6).toFixed(1).replace(/\.0$/,"")+"M" : n >= 1e5 ? Math.round(n/1e3)+"K" : String(n);
+const haptic = t => { try { tg?.HapticFeedback?.selectionChanged(); if (t) tg?.HapticFeedback?.notificationOccurred(t); } catch(e) {} };
+
+let META = null, F = {k:"account", g:"", q:"", pmin:null, pmax:null, min:{}, ch:{}, tx:{}, ver:false, sort:"top"};
+let items = [], next = 0, total = 0, loading = false, reqId = 0;
+
+async function api(path, body) {
+  const r = await fetch(path, {method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({initData, lang: L, ...body})});
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 2200); }
+
+function game() { return META?.games.find(g => g.code === F.g); }
+function activeCount() {
+  return (F.q?1:0) + ((F.pmin||F.pmax)?1:0) + Object.keys(F.min).length + Object.keys(F.ch).length + Object.keys(F.tx).length + (F.ver?1:0);
+}
+
+function renderChips() {
+  const gs = META.games;
+  $("games").innerHTML = [`<button class="chip ${!F.g && F.k==='account'?'on':''}" data-g="">🎮 ${T().all}</button>`]
+    .concat(gs.map(g => `<button class="chip ${F.g===g.code?'on':''}" data-g="${g.code}">${g.emoji} ${esc(g.name)}</button>`)).join("");
+  $("games").querySelectorAll(".chip").forEach(b => b.onclick = () => {
+    const g = gs.find(x => x.code === b.dataset.g); F.g = g ? g.code : ""; F.k = g ? g.kind : "account";
+    F.min = {}; F.ch = {}; F.tx = {}; haptic(); renderChips(); reload();
+  });
+  const q = META.prices.map(p => `<button class="chip ${F.pmin===p.min&&F.pmax===p.max?'on':''}" data-p="${p.key}">💵 ${esc(p.label)}</button>`);
+  const sorts = META.sorts.filter(s => s.key !== "strong" || game()?.kind === "account")
+    .map(s => `<button class="chip ${F.sort===s.key?'on':''}" data-s="${s.key}">${esc(s.label)}</button>`);
+  $("quick").innerHTML = sorts.concat(q).join("");
+  $("quick").querySelectorAll("[data-p]").forEach(b => b.onclick = () => {
+    const p = META.prices.find(x => x.key === b.dataset.p);
+    if (F.pmin === p.min && F.pmax === p.max) { F.pmin = F.pmax = null; } else { F.pmin = p.min; F.pmax = p.max; }
+    haptic(); renderChips(); reload();
+  });
+  $("quick").querySelectorAll("[data-s]").forEach(b => b.onclick = () => { F.sort = b.dataset.s; haptic(); renderChips(); reload(); });
+  const n = activeCount(); $("badge").hidden = !n; $("badge").textContent = n;
+  $("sortLbl").textContent = META.sorts.find(s => s.key === F.sort)?.label || "";
+}
+
+function card(it) {
+  const stats = it.fields.filter(f => /^\d/.test(f.value)).slice(0, 3)
+    .map(f => `<span class="st">${f.icon} ${esc(f.label)} ${esc(f.value)}</span>`).join("");
+  return `<button class="card" data-id="${it.id}">
+    <div class="ph"><img loading="lazy" src="/api/photo/${it.id}/0" alt="">
+      ${it.top ? '<span class="tag">🔥 TOP</span>' : ''}${it.photos > 1 ? `<span class="cnt">🖼 ${it.photos}</span>` : ''}</div>
+    <div class="cb"><div class="price">${it.kind==='topup'?(L==='ru'?'от ':''):''}${fmt(it.price)} <small>${T().som}${it.kind==='topup'&&L!=='ru'?' dan':''}${it.negotiable?' · 🤝':''}</small></div>
+      <div class="title">${it.emoji} ${esc(it.title)}</div><div class="stats">${stats}</div>
+      ${it.verified ? '<div class="ver">✅ verified</div>' : ''}</div></button>`;
+}
+
+function skeleton(n) { return Array.from({length:n}, () => '<div class="sk"></div>').join(""); }
+
+async function reload() {
+  items = []; next = 0; $("grid").innerHTML = skeleton(6); await load(true);
+}
+async function load(first) {
+  if (loading || next === null) return; loading = true;
+  const my = ++reqId;
+  try {
+    const r = await api("/api/search", {filters: F, offset: next});
+    if (my !== reqId) return;
+    total = r.total; next = r.next; items = items.concat(r.items);
+    $("count").textContent = T().found(total);
+    if (first) $("grid").innerHTML = "";
+    if (!items.length) { $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1"><b>🔍</b>${T().empty}<br><small>${T().emptyH}</small></div>`; }
+    else $("grid").insertAdjacentHTML("beforeend", r.items.map(card).join(""));
+    $("grid").querySelectorAll(".card:not([data-b])").forEach(c => { c.dataset.b = 1; c.onclick = () => openDetail(+c.dataset.id); });
+  } catch (e) { $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1"><b>⚠️</b>${initData ? T().err : T().onlyTg}</div>`; }
+  finally { if (my === reqId) loading = false; }
+}
+
+// ---------- Sheets ----------
+let openSheet = null;
+function show(id) {
+  hideAll(); openSheet = id; $("ov").classList.add("on"); $(id).classList.add("on");
+  tg?.BackButton?.show();
+}
+function hideAll() {
+  ["fsheet","dsheet","rsheet"].forEach(s => $(s).classList.remove("on")); $("ov").classList.remove("on");
+  openSheet = null; tg?.BackButton?.hide(); tg?.MainButton?.hide();
+}
+$("ov").onclick = hideAll; tg?.BackButton?.onClick(hideAll);
+
+let countTimer;
+async function previewCount() {
+  clearTimeout(countTimer);
+  countTimer = setTimeout(async () => {
+    try { const r = await api("/api/search", {filters: F, offset: 0}); tg?.MainButton?.setText(T().show(r.total)); $("fshow").textContent = T().show(r.total); } catch(e) {}
+  }, 250);
+}
+
+function renderFilters() {
+  const g = game(), t = T();
+  let h = `<div class="sec"><h4>${t.price}</h4><div class="row">
+    <input class="in" id="pmin" inputmode="numeric" placeholder="${t.from}" value="${F.pmin ?? ''}">
+    <input class="in" id="pmax" inputmode="numeric" placeholder="${t.to}" value="${F.pmax ?? ''}"></div></div>`;
+  for (const f of (g?.filters || [])) {
+    h += `<div class="sec"><h4>${f.icon} ${esc(f.label)}${f.type==='min' ? ' · '+t.min : ''}</h4>`;
+    if (f.type === "min") {
+      h += `<div class="wrapc">` + [`<button class="chip ${!F.min[f.key]?'on':''}" data-min="${f.key}" data-v="">${t.any}</button>`]
+        .concat(f.presets.map(v => `<button class="chip ${F.min[f.key]==v?'on':''}" data-min="${f.key}" data-v="${v}">≥ ${short(v)}</button>`)).join("") + `</div>`;
+    } else if (f.type === "choice") {
+      h += `<div class="wrapc">` + [`<button class="chip ${!F.ch[f.key]?'on':''}" data-ch="${f.key}" data-v="">${t.any}</button>`]
+        .concat(f.options.map(o => `<button class="chip ${F.ch[f.key]===o?'on':''}" data-ch="${f.key}" data-v="${esc(o)}">${esc(o.split(' / ')[0])}</button>`)).join("") + `</div>`;
+    } else {
+      h += `<input class="in" data-tx="${f.key}" placeholder="${t.text}" value="${esc(F.tx[f.key] || '')}">`;
+    }
+    h += `</div>`;
+  }
+  h += `<div class="sec"><div class="tog" id="vtog"><span>✅ ${t.verified}</span><span class="sw ${F.ver?'on':''}"></span></div></div>
+    <div class="acts"><button class="b2" id="freset">♻️ ${t.reset}</button><button class="b1" id="fshow">${t.show(total)}</button></div>`;
+  $("fbody").innerHTML = h;
+  const num = v => { const n = parseInt(String(v).replace(/\D/g, ""), 10); return isNaN(n) ? null : n; };
+  $("pmin").oninput = e => { F.pmin = num(e.target.value); previewCount(); };
+  $("pmax").oninput = e => { F.pmax = num(e.target.value); previewCount(); };
+  $("fbody").querySelectorAll("[data-min]").forEach(b => b.onclick = () => {
+    const k = b.dataset.min; if (b.dataset.v) F.min[k] = +b.dataset.v; else delete F.min[k]; haptic(); renderFilters(); previewCount(); });
+  $("fbody").querySelectorAll("[data-ch]").forEach(b => b.onclick = () => {
+    const k = b.dataset.ch; if (b.dataset.v) F.ch[k] = b.dataset.v; else delete F.ch[k]; haptic(); renderFilters(); previewCount(); });
+  $("fbody").querySelectorAll("[data-tx]").forEach(i => i.oninput = () => {
+    const k = i.dataset.tx; if (i.value.trim()) F.tx[k] = i.value.trim(); else delete F.tx[k]; previewCount(); });
+  $("vtog").onclick = () => { F.ver = !F.ver; haptic(); renderFilters(); previewCount(); };
+  $("freset").onclick = () => { F = {...F, q:"", pmin:null, pmax:null, min:{}, ch:{}, tx:{}, ver:false}; $("q").value = ""; haptic(); renderFilters(); previewCount(); };
+  $("fshow").onclick = applyFilters;
+}
+function applyFilters() { hideAll(); renderChips(); reload(); haptic("success"); }
+
+$("fbtn").onclick = () => {
+  renderFilters(); show("fsheet"); previewCount();
+  if (tg?.MainButton) { tg.MainButton.setText(T().show(total)); tg.MainButton.show(); }
+};
+tg?.MainButton?.onClick(() => { if (openSheet === "fsheet") applyFilters(); });
+
+function openDetail(id) {
+  const it = items.find(x => x.id === id); if (!it) return; haptic();
+  const imgs = Array.from({length: it.photos}, (_, i) => `<img loading="lazy" src="/api/photo/${it.id}/${i}" alt="">`).join("");
+  const kv = it.fields.map(f => `<div>${f.icon} ${esc(f.label)}<b>${esc(f.value)}</b></div>`).join("");
+  $("dbody").innerHTML = `<div class="gal">${imgs}</div>
+    <div class="dtitle">${it.top ? '🔥 ' : ''}${it.emoji} ${esc(it.title)}</div>
+    <div class="price">${fmt(it.price)} <small>${T().som}${it.negotiable ? ' · 🤝 ' + T().neg : ''}</small></div>
+    <div class="meta" style="margin:4px 0"><span>#${it.id} · ${esc(it.gameName)}</span><span>👁 ${it.views} ${T().views}</span></div>
+    ${it.verified ? '<div class="ver">✅ verified seller</div>' : ''}
+    <div class="kv">${kv}</div>
+    ${it.description ? `<div class="desc">${esc(it.description)}</div>` : ''}
+    <div class="acts"><button class="b1" id="dopen">${T().open}</button><button class="b2" id="dshare">${T().share}</button></div>
+    <div class="warn">${T().warn}</div>`;
+  $("dopen").onclick = async () => {
+    try { await api("/api/open", {id}); haptic("success"); toast(T().sent); setTimeout(() => tg?.close(), 700); }
+    catch (e) { toast(T().err); }
+  };
+  $("dshare").onclick = () => { try { tg.switchInlineQuery("#" + id, ["users", "groups", "channels"]); } catch (e) { toast("#" + id); } };
+  show("dsheet");
+}
+
+let qTimer;
+$("q").addEventListener("input", e => { clearTimeout(qTimer); qTimer = setTimeout(() => { F.q = e.target.value.trim(); renderChips(); reload(); }, 350); });
+$("q").addEventListener("keydown", e => { if (e.key === "Enter") e.target.blur(); });
+
+new IntersectionObserver(es => { if (es[0].isIntersecting && items.length) load(false); }, {rootMargin: "400px"}).observe($("more"));
+
+async function boot() {
+  $("grid").innerHTML = skeleton(6);
+  try {
+    META = await api("/api/meta", {});
+    L = META.lang || L;
+    const accounts = META.games.filter(g => g.kind === "account");
+    if (accounts.length === 1) F.g = accounts[0].code;
+  } catch (e) {
+    META = {games: [], sorts: [], prices: [], rules: ""};
+  }
+  $("sub").textContent = T().sub; $("q").placeholder = T().ph;
+  $("warn").innerHTML = `${T().warn} <a href="#" id="rl">${T().rules} →</a>`;
+  $("rl").onclick = ev => { ev.preventDefault(); $("rbody").innerHTML = META.rules || ""; show("rsheet"); };
+  renderChips(); reload();
+}
+boot();
+</script>
+</body>
+</html>
